@@ -30,7 +30,7 @@ int main(int argc, char** argv){
 		clock_t begin, end;
 		double linked_stack_time_result, array_stack_time_result;
 		
-		const unsigned long operations_amount = i * 500;
+		const unsigned long operations_amount = i * 10;
 		
 		// Linked stack benchmark
 		{

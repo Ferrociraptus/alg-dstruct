@@ -7,8 +7,12 @@ struct __object_linked_stack{
 	ObjectLinkedList* list;
 };
 
-static void __object_linked_stack_destructor(ObjectLinkedStack* stack){
-	del(stack->list);
+static DESTRUCTOR(ObjectLinkedStack){
+	if (self == NULL)
+		return NULL;
+	
+	del(self->list);
+	return self;
 }
 
 DEFAULT_MEMORY_ALLOCATOR(ObjectLinkedStack);
@@ -17,7 +21,7 @@ CONSTRUCTOR(ObjectLinkedStack){
 	if (self == NULL)
 		return NULL;
 	
-	self->obj.destructor = DESTRUCTOR_TYPE(__object_linked_stack_destructor);
+	REGISTER_DESTRUCTOR(self, DESTRUCTOR_FUN(ObjectLinkedStack));
 	
 	self->list = new(ObjectLinkedList, 0);
 	if (self->list == NULL){
