@@ -26,11 +26,10 @@ IntObject* IntObject_new(int value){
 */
 
 
-
-
 TEST(ObjectLinkedList_functional_testing, zero_size_list_initialization_testing) {
 	// initialize new list with zero len
-	ObjectLinkedList* list = new(ObjectLinkedList, 0);
+	ObjectLinkedList* list;
+	ASSERT_NO_FATAL_FAILURE((list = new(ObjectLinkedList, 0)));
 	
 	EXPECT_EQ(object_linked_list_len(list), 0);
 }
@@ -56,15 +55,9 @@ TEST(ObjectLinkedList_functional_testing, multy_size_list_empty_initialization_t
 	EXPECT_EQ(object_linked_list_len(list), 10);
 	del(list);
 		
-	list = new(ObjectLinkedList, 33);
-	EXPECT_EQ(object_linked_list_len(list), 33);
+	list = new(ObjectLinkedList, 100);
+	EXPECT_EQ(object_linked_list_len(list), 100);
 	del(list);
-	
-	for (int i = 0; i < 1000; i++){
-		ObjectLinkedList* list = new(ObjectLinkedList, i);
-		EXPECT_EQ(object_linked_list_len(list), i);
-		del(list);
-	}
 }
 
 TEST(ObjectLinkedList_functional_testing, zero_size_list_clear_testing){

@@ -47,7 +47,7 @@ TEST(ObjectLinkedStack_functional_testing, single_adding_item_to_stack_testing) 
 	// initialize new stack with zero len
 	ObjectLinkedStack* stack = new(ObjectLinkedStack);
 	
-	ASSERT_NO_FATAL_FAILURE(object_linked_stack_add(stack, OBJECT(new(IntObject, 23))));
+	ASSERT_NO_FATAL_FAILURE(object_linked_stack_add(stack, OBJECT(new(IntObject, 1))));
 	EXPECT_EQ(object_linked_stack_size(stack), 1);
 }
 
@@ -55,26 +55,20 @@ TEST(ObjectLinkedStack_functional_testing, plural_adding_item_to_stack_testing) 
 	// initialize new stack with zero len
 	ObjectLinkedStack* stack = new(ObjectLinkedStack);
 	
-	ASSERT_NO_FATAL_FAILURE(object_linked_stack_add(stack, OBJECT(new(IntObject, 24))));
-	ASSERT_NO_FATAL_FAILURE(object_linked_stack_add(stack, OBJECT(new(IntObject, 56))));
-	ASSERT_NO_FATAL_FAILURE(object_linked_stack_add(stack, OBJECT(new(IntObject, 87))));
+	ASSERT_NO_FATAL_FAILURE(object_linked_stack_add(stack, OBJECT(new(IntObject, 1))));
+	ASSERT_NO_FATAL_FAILURE(object_linked_stack_add(stack, OBJECT(new(IntObject, 2))));
+	ASSERT_NO_FATAL_FAILURE(object_linked_stack_add(stack, OBJECT(new(IntObject, 3))));
 	
-	for (int i = 0; i < 100; i ++)
-		ASSERT_NO_FATAL_FAILURE(object_linked_stack_add(stack, OBJECT(new(IntObject, i))));
-	
-	EXPECT_EQ(object_linked_stack_size(stack), 103);
+	EXPECT_EQ(object_linked_stack_size(stack), 3);
 }
 
 TEST(ObjectLinkedStack_functional_testing, not_empty_stack_destructor_testing) {
 	// initialize new stack with zero len
 	ObjectLinkedStack* stack = new(ObjectLinkedStack);
 	
-	object_linked_stack_add(stack, OBJECT(new(IntObject, 24)));
-	object_linked_stack_add(stack, OBJECT(new(IntObject, 56)));
-	object_linked_stack_add(stack, OBJECT(new(IntObject, 87)));
-	
-	for (int i = 0; i < 100; i ++)
-		object_linked_stack_add(stack, OBJECT(new(IntObject, i)));
+	object_linked_stack_add(stack, OBJECT(new(IntObject, 1)));
+	object_linked_stack_add(stack, OBJECT(new(IntObject, 2)));
+	object_linked_stack_add(stack, OBJECT(new(IntObject, 3)));
 	
 	ASSERT_NO_FATAL_FAILURE(del(stack));
 }
@@ -90,7 +84,7 @@ TEST(ObjectLinkedStack_functional_testing, empty_stack_pop_testing) {
 TEST(ObjectLinkedStack_functional_testing, not_empty_stack_pop_testing) {
 	// initialize new stack with zero len
 	ObjectLinkedStack* stack = new(ObjectLinkedStack);
-	object_linked_stack_add(stack, OBJECT(new(IntObject, 24)));
+	object_linked_stack_add(stack, OBJECT(new(IntObject, 1)));
 	
-	EXPECT_EQ(INT_OBJECT(object_linked_stack_pop(stack))->val, 24);
+	EXPECT_EQ(INT_OBJECT(object_linked_stack_pop(stack))->val, 1);
 }
