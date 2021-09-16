@@ -24,6 +24,12 @@ IntObject* IntObject_new(int value){
 	return obj;
 }
 */
+#define TYPE_DECODE(val) ((struct test_type_decode*)(val))
+struct test_type_decode{
+	Object obj;
+	Object** arr;
+	uint64_t size;
+};
 
 
 
@@ -55,9 +61,13 @@ TEST(ObjectArrayStack_functional_testing, plural_adding_item_to_stack_testing) {
 	// initialize new stack with zero len
 	ObjectArrayStack* stack = new(ObjectArrayStack);
 	
-	ASSERT_NO_FATAL_FAILURE(object_array_stack_add(stack, OBJECT(new(IntObject, 1))));
-	ASSERT_NO_FATAL_FAILURE(object_array_stack_add(stack, OBJECT(new(IntObject, 2))));
-	ASSERT_NO_FATAL_FAILURE(object_array_stack_add(stack, OBJECT(new(IntObject, 3))));
+	unsigned long* stack_size = &(TYPE_DECODE(stack)->size);
+	*stack_size = 3;
+	Object*** stack_arr = &(TYPE_DECODE(stack)->arr);
+	*stack_arr = (Object**)realloc(*stack_arr, sizeof(Object*)*(*stack_size));
+	(*stack_arr)[0] = OBJECT(new(IntObject, 1));
+	(*stack_arr)[1] = OBJECT(new(IntObject, 2));
+	(*stack_arr)[2] = OBJECT(new(IntObject, 3));
 	
 	EXPECT_EQ(object_array_stack_size(stack), 3);
 }
@@ -66,9 +76,13 @@ TEST(ObjectArrayStack_functional_testing, not_empty_stack_destructor_testing) {
 	// initialize new stack with zero len
 	ObjectArrayStack* stack = new(ObjectArrayStack);
 	
-	object_array_stack_add(stack, OBJECT(new(IntObject, 1)));
-	object_array_stack_add(stack, OBJECT(new(IntObject, 2)));
-	object_array_stack_add(stack, OBJECT(new(IntObject, 3)));
+	unsigned long* stack_size = &(TYPE_DECODE(stack)->size);
+	*stack_size = 3;
+	Object*** stack_arr = &(TYPE_DECODE(stack)->arr);
+	*stack_arr = (Object**)realloc(*stack_arr, sizeof(Object*)*(*stack_size));
+	(*stack_arr)[0] = OBJECT(new(IntObject, 1));
+	(*stack_arr)[1] = OBJECT(new(IntObject, 2));
+	(*stack_arr)[2] = OBJECT(new(IntObject, 3));
 	
 	ASSERT_NO_FATAL_FAILURE(del(stack));
 }
@@ -84,7 +98,12 @@ TEST(ObjectArrayStack_functional_testing, empty_stack_pop_testing) {
 TEST(ObjectArrayStack_functional_testing, not_empty_stack_pop_testing) {
 	// initialize new stack with zero len
 	ObjectArrayStack* stack = new(ObjectArrayStack);
-	object_array_stack_add(stack, OBJECT(new(IntObject, 1)));
+	
+	unsigned long* stack_size = &(TYPE_DECODE(stack)->size);
+	*stack_size = 1;
+	Object*** stack_arr = &(TYPE_DECODE(stack)->arr);
+	*stack_arr = (Object**)realloc(*stack_arr, sizeof(Object*)*(*stack_size));
+	(*stack_arr)[0] = OBJECT(new(IntObject, 1));
 	
 	EXPECT_EQ(INT_OBJECT(object_array_stack_pop(stack))->val, 1);
 }
