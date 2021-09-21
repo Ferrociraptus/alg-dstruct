@@ -1,0 +1,7 @@
+.kdev4/*
+.~lock*
+*.kdev4
+lab_2
+obj/*
+testing/obj/
+testing/testing
