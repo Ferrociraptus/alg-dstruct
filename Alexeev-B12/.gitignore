@@ -2,6 +2,6 @@
 .~lock*
 *.kdev4
 lab_2
-obj/*
+bin/*
 testing/obj/
 testing/testing
