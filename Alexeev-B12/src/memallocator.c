@@ -1,5 +1,6 @@
 #include "memallocator.h"
 #include <stdlib.h>
+#include <stdio.h>
 #include <inttypes.h>
 
 #ifndef TRUE
@@ -19,27 +20,41 @@ typedef uint8_t byte;
 
 
 static Header* start_head = NULL;
+static Header* current_head = NULL;
+static uint64_t init_size = 0;
 
 
 struct __header{
 	struct __header* next;
-	unsigned int size;
+	uint32_t size;
 	uint8_t is_reserved: 1;
 };
 
 inline static byte* __get_cell_byte(Header* cell_meta, uint32_t byte_index){
-	uint32_t cell_byte = sizeof(byte) * byte_index;
-	return BYTE_ORDERING (cell_meta) + sizeof(Header) + cell_byte;
+	return BYTE_ORDERING(cell_meta) + sizeof(Header) + sizeof(byte) * byte_index;
 }
 
 inline static byte* __last_cell_byte(Header* cell_meta){
-	return __get_cell_byte(cell_meta, cell_meta->size - 1);
+	if (cell_meta->size > 0)
+		return __get_cell_byte(cell_meta, cell_meta->size - 1);
+	else
+		return BYTE_ORDERING(cell_meta) + sizeof(Header);
 }
 
 inline static int8_t __is_mergeble(Header* first, Header* second){
-	if ( BYTE_ORDERING (__last_cell_byte(first)) + sizeof(byte) == BYTE_ORDERING (second))
+	if (BYTE_ORDERING(__last_cell_byte(first)) + ((first->size > 0) ? sizeof(byte): 0) == BYTE_ORDERING (second))
 		return TRUE;
 	return FALSE;
+}
+
+static uint64_t __mem_pool_size(){
+	Header* head = start_head;
+	uint64_t size = 0;
+	while (head != NULL){
+		size += head->size + sizeof(Header);
+		head = head->next;
+	}
+	return size;
 }
 
 static Header* __split_cell(Header* cell_meta, uint32_t size){
@@ -48,7 +63,7 @@ static Header* __split_cell(Header* cell_meta, uint32_t size){
 	
 	// check if cell meta can be placed into tail memory cell of current block
 	byte* new_cell_pos = __get_cell_byte(cell_meta, size);
-	if (__last_cell_byte(cell_meta) - new_cell_pos + 1 <= sizeof(Header))
+	if ((__last_cell_byte(cell_meta) - new_cell_pos) + 1 <= sizeof(Header))
 		return NULL;
 	
 	Header* new_cell_header = (Header*)new_cell_pos;
@@ -96,23 +111,33 @@ int meminit(void* pMemory, int size){
 	start_head->size = size - sizeof(Header);
 	start_head->next = NULL;
 	start_head->is_reserved = FALSE;
+	
+	current_head = start_head;
+	
+	init_size = size;
 	return 1;
 }
 
 void memdone(){
+	uint64_t current_size = __mem_pool_size();
+	if (current_size != init_size)
+		fprintf(stderr, "Memory leak was detected!\n\tExpected: %lu\n\tGot: %lu\n", init_size, current_size);
 	start_head = NULL;
+	current_head = start_head;
 }
 
 void* memalloc(int size){
-	Header* heads_cursor = start_head;
+	Header* heads_cursor = current_head;
 	while (heads_cursor != NULL){
 		if ( !heads_cursor->is_reserved && heads_cursor->size >= size){
 			__split_cell(heads_cursor, size);
 			heads_cursor->is_reserved = TRUE;
+			current_head = heads_cursor->next;
 			return FIRST_CELL_BYTE(heads_cursor);
 		}
 		heads_cursor = heads_cursor->next;
 	}
+	printf("No available memory for %d bytes!\n", size);
 	return NULL;
 }
 
@@ -120,15 +145,17 @@ void memfree(void* p){
 	if (p == NULL)
 		return;
 	
-	Header* curent_cell = CELL_HEADER(p);
-	curent_cell->is_reserved = FALSE;
-	Header* prev_cell = __find_previous_cell(curent_cell);
-	if (prev_cell != NULL){
-		if (!prev_cell->is_reserved)
-			__soft_merge_cells(prev_cell, curent_cell);
-		if (curent_cell->next != NULL)
-			__soft_merge_cells(curent_cell, curent_cell->next);
-	}
+	Header* current_cell = CELL_HEADER(p);
+	current_head = current_cell;
+	current_cell->is_reserved = FALSE;
+	Header* prev_cell = __find_previous_cell(current_cell);
+	
+	if (prev_cell != NULL)
+		if (__soft_merge_cells(prev_cell, current_cell))
+			current_head = current_cell = prev_cell;
+	
+	if (current_cell->next != NULL)
+		__soft_merge_cells(current_cell, current_cell->next);
 }
 
 int memgetminimumsize(){
