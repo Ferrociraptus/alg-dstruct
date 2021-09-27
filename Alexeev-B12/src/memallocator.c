@@ -137,7 +137,7 @@ void* memalloc(int size){
 		}
 		heads_cursor = heads_cursor->next;
 	}
-	printf("No available memory for %d bytes!\n", size);
+	fprintf(stderr, "No available memory for %d bytes!\n", size);
 	return NULL;
 }
 
