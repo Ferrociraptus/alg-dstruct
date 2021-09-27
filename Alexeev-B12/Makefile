@@ -1,5 +1,5 @@
 WARNINGS = -Wall
-DEBUG = -ggdb -fno-omit-frame-pointer
+DEBUG = -ggdb -fno-omit-frame-pointer -Walloc-zero -Walloca -Wformat-overflow -Wformat-truncation -Wnonnull
 OPTIMIZE = -O0
 CC = gcc
 ADDICTIONAL_LIBS =
