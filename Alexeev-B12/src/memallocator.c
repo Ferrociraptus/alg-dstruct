@@ -87,6 +87,9 @@ static int8_t __hard_merge_cells(Header* first, Header* second){
 }
 
 static int8_t __soft_merge_cells(Header* first, Header* second){
+	if (first == NULL || second == NULL)
+		return FALSE;
+	
 	if (!first->is_reserved && !second->is_reserved)
 		return __hard_merge_cells(first, second);
 	return FALSE;
@@ -130,9 +133,10 @@ void* memalloc(int size){
 	Header* heads_cursor = current_head;
 	while (heads_cursor != NULL){
 		if ( !heads_cursor->is_reserved && heads_cursor->size >= size){
-			__split_cell(heads_cursor, size);
+			Header* split_result = __split_cell(heads_cursor, size);
 			heads_cursor->is_reserved = TRUE;
-			current_head = heads_cursor->next;
+			if (current_head->is_reserved && split_result != NULL)
+				current_head = split_result;
 			return FIRST_CELL_BYTE(heads_cursor);
 		}
 		heads_cursor = heads_cursor->next;
@@ -146,16 +150,19 @@ void memfree(void* p){
 		return;
 	
 	Header* current_cell = CELL_HEADER(p);
-	current_head = current_cell;
+	
 	current_cell->is_reserved = FALSE;
 	Header* prev_cell = __find_previous_cell(current_cell);
 	
 	if (prev_cell != NULL)
 		if (__soft_merge_cells(prev_cell, current_cell))
-			current_head = current_cell = prev_cell;
+			current_cell = prev_cell;
 	
 	if (current_cell->next != NULL)
 		__soft_merge_cells(current_cell, current_cell->next);
+	
+	if (current_cell - current_head < 0)
+		current_head = current_cell;
 }
 
 int memgetminimumsize(){
