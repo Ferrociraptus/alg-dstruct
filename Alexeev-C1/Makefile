@@ -7,7 +7,7 @@ C_FLAGS = -I$(HEADER_DIR) -I../lab2
 
 SRC_DIR=src
 BIN_DIR=bin
-HEADER_DIR=head
+HEADER_DIR=header
 
 SRC_FILES=$(wildcard $(SRC_DIR)/*.c)
 HEADER_FILES=$(wildcard $(HEADER_DIR)/*.h)
