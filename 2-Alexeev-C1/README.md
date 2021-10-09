@@ -19,10 +19,10 @@ Graph DFS from adjacency list
 stdin:
 ```
 5
-0 1
-2 3 4
-2
-4
+0 2
+1
+2 4
+3 4
 4
 ```
 stdout:
