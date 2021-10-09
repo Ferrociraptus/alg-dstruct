@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <ctype.h>
 #include "graph.h"
 
 struct __graph{
@@ -85,7 +86,7 @@ VertexArrayList* graph_pre_order_traversal(Graph* graph, unsigned int start_vert
 	return traversal_ans;
 }
 
-Graph* graph_parse_graph(FILE* stream){
+Graph* graph_parse_graph_adjacency_list(FILE* stream){
 	int val;
 	fscanf(stream, "%d\n", &val);
 	
@@ -96,19 +97,22 @@ Graph* graph_parse_graph(FILE* stream){
 	
 	graph_init_all_vertex(graph);
 	
-	for (int i = 0; i < val; i ++){
+	while (1){
 		int parent_node_index, neighbour_node_index;
 		int scan_result = 0;
 		char line[250];
 		char* line_p = line;
 		
-		fgets(line, 250, stream);
+		if(fgets(line, 250, stream) == NULL)
+			break;
 		
-		line_p += sscanf(line, "%d", &parent_node_index);
+		sscanf(line, "%d", &parent_node_index);
+		
+		while(isdigit(*line_p)) line_p++;
 		while(*line_p == ' ') line_p++;
 		
-		while ((scan_result = sscanf(line_p, "%d", &neighbour_node_index)) > 0){
-			line_p += scan_result;
+		while (sscanf(line_p, "%d", &neighbour_node_index) > 0){
+			while(isdigit(*line_p)) line_p++;
 			while(*line_p == ' ') line_p++;
 			graph_create_biderectional_edge(graph, parent_node_index, neighbour_node_index);
 		}

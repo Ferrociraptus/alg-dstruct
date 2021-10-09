@@ -21,6 +21,6 @@ void graph_create_one_derectional_edge(Graph* graph,
 
 VertexArrayList* graph_pre_order_traversal(Graph* graph, unsigned int start_vertex_index);
 
-Graph* graph_parse_graph(FILE* stream);
+Graph* graph_parse_graph_adjacency_list(FILE* stream);
 
 #endif

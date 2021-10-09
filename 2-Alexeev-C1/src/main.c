@@ -18,7 +18,7 @@ int main(){
 // 	
 // 	stdin = freopen("input", "r", stdin);
 	
-	Graph* graph = graph_parse_graph(stdin);
+	Graph* graph = graph_parse_graph_adjacency_list(stdin);
 	VertexArrayList* ans = graph_pre_order_traversal(graph, 0);
 	for (int i = 0; i < vertex_array_list_len(ans) - 1; i++)
 		printf("%d ", vertex_get_index(vertex_array_list_get(ans, i)));

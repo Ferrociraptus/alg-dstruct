@@ -22,7 +22,7 @@ TEST(pre_order_graph_traversal, example_test1){
 	input = fopen(INPUT_STREAM_FILE, "r");
 	FILE* output = fopen(OUTPUT_STREAM_FILE, "w");
 	
-	Graph* graph = graph_parse_graph(input);
+	Graph* graph = graph_parse_graph_adjacency_list(input);
 	VertexArrayList* ans = graph_pre_order_traversal(graph, 0);
 	for (int i = 0; i < vertex_array_list_len(ans) - 1; i++)
 		fprintf(output, "%d ", vertex_get_index(vertex_array_list_get(ans, i)));
@@ -58,7 +58,7 @@ TEST(pre_order_graph_traversal, example_test2){
 	input = fopen(INPUT_STREAM_FILE, "r");
 	FILE* output = fopen(OUTPUT_STREAM_FILE, "w");
 	
-	Graph* graph = graph_parse_graph(input);
+	Graph* graph = graph_parse_graph_adjacency_list(input);
 	VertexArrayList* ans = graph_pre_order_traversal(graph, 0);
 	for (int i = 0; i < vertex_array_list_len(ans) - 1; i++)
 		fprintf(output, "%d ", vertex_get_index(vertex_array_list_get(ans, i)));
@@ -92,7 +92,7 @@ TEST(pre_order_graph_traversal, binary_tree_test1){
 	input = fopen(INPUT_STREAM_FILE, "r");
 	FILE* output = fopen(OUTPUT_STREAM_FILE, "w");
 	
-	Graph* graph = graph_parse_graph(input);
+	Graph* graph = graph_parse_graph_adjacency_list(input);
 	VertexArrayList* ans = graph_pre_order_traversal(graph, 0);
 	for (int i = 0; i < vertex_array_list_len(ans) - 1; i++)
 		fprintf(output, "%d ", vertex_get_index(vertex_array_list_get(ans, i)));
@@ -126,7 +126,7 @@ TEST(pre_order_graph_traversal, binary_tree_test){
 	input = fopen(INPUT_STREAM_FILE, "r");
 	FILE* output = fopen(OUTPUT_STREAM_FILE, "w");
 	
-	Graph* graph = graph_parse_graph(input);
+	Graph* graph = graph_parse_graph_adjacency_list(input);
 	VertexArrayList* ans = graph_pre_order_traversal(graph, 0);
 	for (int i = 0; i < vertex_array_list_len(ans) - 1; i++)
 		fprintf(output, "%d ", vertex_get_index(vertex_array_list_get(ans, i)));
@@ -160,7 +160,7 @@ TEST(pre_order_graph_traversal, looped_graph_test){
 	input = fopen(INPUT_STREAM_FILE, "r");
 	FILE* output = fopen(OUTPUT_STREAM_FILE, "w");
 	
-	Graph* graph = graph_parse_graph(input);
+	Graph* graph = graph_parse_graph_adjacency_list(input);
 	VertexArrayList* ans = graph_pre_order_traversal(graph, 0);
 	for (int i = 0; i < vertex_array_list_len(ans) - 1; i++)
 		fprintf(output, "%d ", vertex_get_index(vertex_array_list_get(ans, i)));
@@ -194,7 +194,7 @@ TEST(pre_order_graph_traversal, disconected_graph_test){
 	input = fopen(INPUT_STREAM_FILE, "r");
 	FILE* output = fopen(OUTPUT_STREAM_FILE, "w");
 	
-	Graph* graph = graph_parse_graph(input);
+	Graph* graph = graph_parse_graph_adjacency_list(input);
 	VertexArrayList* ans = graph_pre_order_traversal(graph, 0);
 	for (int i = 0; i < vertex_array_list_len(ans) - 1; i++)
 		fprintf(output, "%d ", vertex_get_index(vertex_array_list_get(ans, i)));
@@ -225,7 +225,7 @@ TEST(pre_order_graph_traversal, disconected_graph_determined_start_test){
 	input = fopen(INPUT_STREAM_FILE, "r");
 	FILE* output = fopen(OUTPUT_STREAM_FILE, "w");
 	
-	Graph* graph = graph_parse_graph(input);
+	Graph* graph = graph_parse_graph_adjacency_list(input);
 	VertexArrayList* ans = graph_pre_order_traversal(graph, 0);
 	for (int i = 0; i < vertex_array_list_len(ans) - 1; i++)
 		fprintf(output, "%d ", vertex_get_index(vertex_array_list_get(ans, i)));
