@@ -82,6 +82,11 @@ void vertex_array_list_del(VertexArrayList* list){
 	free(list);
 }
 
+void vertex_array_list_del_with_nodes(VertexArrayList* list){
+	for (int i = 0; i < list->len; i++)
+		if (list->arr[i] != NULL)
+			__vertex_del(list->arr[i]);
+}
 
 Vertex* vertex_array_list_get(VertexArrayList* list, int index){
 	index = __index_to_list_range(list, index);

@@ -31,12 +31,7 @@ Graph* graph_new(unsigned max_index){
 }
 
 void graph_del(Graph* graph){
-	for (int i = 0; i < graph->max_index; i++){
-		Vertex* vertex = vertex_array_list_get(graph->vertexses, i);
-		if (vertex != NULL)
-			__vertex_del (vertex);
-	}
-	free(graph->vertexses);
+	vertex_array_list_del_with_nodes(graph->vertexses);
 	free(graph);
 }
 
@@ -106,7 +101,8 @@ Graph* graph_parse_graph_adjacency_list(FILE* stream){
 		if(fgets(line, 250, stream) == NULL)
 			break;
 		
-		sscanf(line, "%d", &parent_node_index);
+		if (sscanf(line, "%d", &parent_node_index) <= 0)
+			break;
 		
 		while(isdigit(*line_p)) line_p++;
 		while(*line_p == ' ') line_p++;

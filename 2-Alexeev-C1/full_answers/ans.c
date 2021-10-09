@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -20,6 +19,7 @@ unsigned vertex_get_index(Vertex* vertex);
 
 VertexArrayList* vertex_array_list_new(unsigned start_size);
 void vertex_array_list_del(VertexArrayList* list);
+void vertex_array_list_del_with_nodes(VertexArrayList* list);
 Vertex* vertex_array_list_get(VertexArrayList* list, int index);
 void vertex_array_list_set(VertexArrayList* list, int index, Vertex* vertex);
 void vertex_array_list_append(VertexArrayList* list, Vertex* vertex);
@@ -116,6 +116,11 @@ void vertex_array_list_del(VertexArrayList* list){
 	free(list);
 }
 
+void vertex_array_list_del_with_nodes(VertexArrayList* list){
+	for (int i = 0; i < list->len; i++)
+		if (list->arr[i] != NULL)
+			__vertex_del(list->arr[i]);
+}
 
 Vertex* vertex_array_list_get(VertexArrayList* list, int index){
 	index = __index_to_list_range(list, index);
@@ -250,7 +255,7 @@ void graph_create_one_derectional_edge(Graph* graph,
 
 VertexArrayList* graph_pre_order_traversal(Graph* graph, unsigned int start_vertex_index);
 
-Graph* graph_parse_graph(FILE* stream);
+Graph* graph_parse_graph_adjacency_list(FILE* stream);
 
 #endif
 //---------------------------------end--------------------------------
@@ -259,8 +264,6 @@ Graph* graph_parse_graph(FILE* stream);
 
 
 //----------------------------Graph source----------------------------
-
-
 struct __graph{
 	unsigned int max_index;
 	VertexArrayList* vertexses;
@@ -284,12 +287,7 @@ Graph* graph_new(unsigned max_index){
 }
 
 void graph_del(Graph* graph){
-	for (int i = 0; i < graph->max_index; i++){
-		Vertex* vertex = vertex_array_list_get(graph->vertexses, i);
-		if (vertex != NULL)
-			__vertex_del (vertex);
-	}
-	free(graph->vertexses);
+	vertex_array_list_del_with_nodes(graph->vertexses);
 	free(graph);
 }
 
@@ -359,7 +357,8 @@ Graph* graph_parse_graph_adjacency_list(FILE* stream){
 		if(fgets(line, 250, stream) == NULL)
 			break;
 		
-		sscanf(line, "%d", &parent_node_index);
+		if (sscanf(line, "%d", &parent_node_index) <= 0)
+			break;
 		
 		while(isdigit(*line_p)) line_p++;
 		while(*line_p == ' ') line_p++;
@@ -380,6 +379,9 @@ int main(){
 	VertexArrayList* ans = graph_pre_order_traversal(graph, 0);
 	for (int i = 0; i < vertex_array_list_len(ans) - 1; i++)
 		printf("%d ", vertex_get_index(vertex_array_list_get(ans, i)));
-	printf("%d", vertex_get_index(vertex_array_list_get(ans, vertex_array_list_len(ans) - 1)));
+	printf("%d\n", vertex_get_index(vertex_array_list_get(ans, vertex_array_list_len(ans) - 1)));
+	
+	graph_del(graph);
+	vertex_array_list_del(ans);
 	return 0;
 }

@@ -13,6 +13,7 @@ unsigned vertex_get_index(Vertex* vertex);
 
 VertexArrayList* vertex_array_list_new(unsigned start_size);
 void vertex_array_list_del(VertexArrayList* list);
+void vertex_array_list_del_with_nodes(VertexArrayList* list);
 Vertex* vertex_array_list_get(VertexArrayList* list, int index);
 void vertex_array_list_set(VertexArrayList* list, int index, Vertex* vertex);
 void vertex_array_list_append(VertexArrayList* list, Vertex* vertex);
