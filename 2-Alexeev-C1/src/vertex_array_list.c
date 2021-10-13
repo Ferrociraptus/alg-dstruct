@@ -5,6 +5,8 @@
 
 #define vertex_swap(a,b){Vertex* tmp = a; a=b; b=tmp;}
 
+#define ALLOC_BLOCK_SIZE 256
+
 struct __vertex{
 	unsigned int index;
 	VertexMarker marker;
@@ -39,7 +41,8 @@ unsigned vertex_get_index(Vertex* vertex){
 }
 
 struct __vertex_array_list{
-	unsigned int len;
+	unsigned int size; //size of allocated memory
+	unsigned int len;  //amount of elements in list
 	Vertex** arr;
 };
 
@@ -56,6 +59,29 @@ static int __index_to_list_range(VertexArrayList* list, int index){
 	return index;
 }
 
+static void* __vertex_list_realloc_for_elements_amount(VertexArrayList* list, unsigned new_elements_amount){
+	unsigned alloc_size = 0;
+	unsigned new_size = new_elements_amount * sizeof(Vertex*);
+	unsigned alloc_rest = new_size % ALLOC_BLOCK_SIZE;
+	alloc_size = new_size - alloc_rest + ((alloc_rest != 0) ? ALLOC_BLOCK_SIZE : 0);
+	
+	if (list->size != alloc_size){
+		Vertex** new_ptr = NULL;
+		
+		if (alloc_size != 0)
+			new_ptr = realloc(list->arr, sizeof(Vertex*)*alloc_size);
+		else
+			new_ptr = realloc(list->arr, sizeof(Vertex*));
+		
+		if (new_ptr == NULL)
+			return NULL;
+		
+		list->arr = new_ptr;
+		list->size = alloc_size;
+	}
+	return list->arr;
+}
+
 VertexArrayList* vertex_array_list_new(unsigned start_size){
 	VertexArrayList* list = (VertexArrayList*)malloc(sizeof(VertexArrayList));
 	
@@ -63,10 +89,10 @@ VertexArrayList* vertex_array_list_new(unsigned start_size){
 		return NULL;
 	
 	list->len = start_size;
-	if (start_size == 0)
-		list->arr = (Vertex**)malloc(sizeof(Vertex*));
-	else
-		list->arr = (Vertex**)malloc(sizeof(Vertex*) * start_size);
+	list->size = 0;
+	list->arr = malloc(sizeof(Vertex*));
+	
+	   __vertex_list_realloc_for_elements_amount(list, start_size);
 	
 	if (list->arr == NULL){
 		free(list);
@@ -98,7 +124,7 @@ void vertex_array_list_set(VertexArrayList* list, int index, Vertex* vertex){
 }
 
 void vertex_array_list_append(VertexArrayList* list, Vertex* vertex){
-	list->arr = (Vertex**)realloc(list->arr, sizeof(Vertex*) * ++list->len);
+	   __vertex_list_realloc_for_elements_amount(list, ++list->len);
 	list->arr[list->len - 1] = vertex;
 }
 
@@ -106,7 +132,7 @@ void vertex_array_list_append(VertexArrayList* list, Vertex* vertex){
 void vertex_array_list_insert(VertexArrayList* list, int index, Vertex* vertex){
 	index = __index_to_list_range(list, index);
 	
-	list->arr = (Vertex**)realloc(list->arr, sizeof(Vertex*) * ++list->len);
+	   __vertex_list_realloc_for_elements_amount(list, ++list->len);
 	
 	memcpy(list->arr+index+1, list->arr+index, sizeof(Vertex*)*(list->len - index - 1));
 	
@@ -115,7 +141,7 @@ void vertex_array_list_insert(VertexArrayList* list, int index, Vertex* vertex){
 
 void vertex_array_list_expand_insert(VertexArrayList* list, int index, Vertex* vertex){
 	if (index >= list->len){
-		list->arr = (Vertex**)realloc(list->arr, sizeof(Vertex*) * (index + 1));
+		      __vertex_list_realloc_for_elements_amount(list, index + 1);
 		for (int i = list->len-1; i <= index; i++)
 			list->arr[i] = NULL;
 		list->arr[index] = vertex;
@@ -136,10 +162,8 @@ Vertex* vertex_array_list_pop(VertexArrayList* list, int index){
 	memcpy(list->arr + index, list->arr + index + 1, sizeof(Vertex*) * (list->len - index - 1));
 	
 	list->len--;
-	if (list->len == 0)
-		list->arr = (Vertex**)realloc(list->arr, sizeof(Vertex*));
-	else
-		list->arr = (Vertex**)realloc(list->arr, sizeof(Vertex*) * list->len);
+	
+	   __vertex_list_realloc_for_elements_amount(list, list->len);
 	
 	return poped_vertex;
 }
