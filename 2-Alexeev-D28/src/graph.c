@@ -272,10 +272,6 @@ int __pre_order_traversal_specific_path_search(Vertex* vertex,
 	
 	vertex_array_list_append(ans_list, vertex);
 	
-	printf("Index: %d\t\tList len:%d\n", vertex->index, vertex_array_list_len(ans_list));
-	vertex_array_list_print_indexses(ans_list, stdout, ", ");
-	putchar('\n');
-	
 	if (vertex_array_list_len(ans_list) >= min_path_len){
 		if ((*check_specification_fun)(ans_list))
 			return 1;
