@@ -3,7 +3,7 @@
 extern "C" {
 #include <stdlib.h>
 #include <time.h>
-#include "graph.h"
+#include "train_task_solving.h"
 }
 
 /*
@@ -48,11 +48,21 @@ NUMA node0 CPU(s):               0-7
 
 #define INPUT_STREAM_FILE "input.txt"
 #define OUTPUT_STREAM_FILE "output.txt"
+#define CHECK_LINE_SIZE 100
 
 typedef struct __vertex{
 	unsigned int index;
-	VertexMarker marker;
+	
+	//for running into graph
+	RuntimeVertexMarker run_marker;
+	
+	//for iteration finding values into graph
+	StatusVertexMarker status_marker;
+	
 	VertexArrayList* neighbours;
+	VertexArrayList* hard_link_neighbours;
+	unsigned block_counter;
+	void* meta_info;
 } Vertex;
 
 struct __vertex_array_list{
@@ -66,324 +76,451 @@ struct __graph{
 	VertexArrayList* vertexses;
 };
 
-TEST(pre_order_graph_traversal, example_test1){
+TEST(train_organize_functional_test_task_sample, example_test){
 	FILE* input = fopen(INPUT_STREAM_FILE, "w");
-	fprintf(input, "5\n"	\
-					"0 2\n"	\
-					"1\n"	\
-					"2 4\n"	\
-					"3 4\n"	\
-					"4\n");
+	fprintf(input, "10 40 3\n"	\
+					"5 3 3 3 6 7 7 9 10 10\n"	\
+					"4\n"	\
+					"3 2\n"	\
+					"4 2\n"	\
+					"10 7\n"\
+					"7 9\n");
 	fclose(input);
 	
-	input = fopen(INPUT_STREAM_FILE, "r");
-	FILE* output = fopen(OUTPUT_STREAM_FILE, "w");
+	organize_train_carriges(INPUT_STREAM_FILE, OUTPUT_STREAM_FILE);
 	
-	Graph* graph = graph_parse_graph_adjacency_list(input);
-	VertexArrayList* ans = graph_pre_order_traversal(graph, 0);
-	for (int i = 0; i < vertex_array_list_len(ans) - 1; i++)
-		fprintf(output, "%d ", vertex_get_index(vertex_array_list_get(ans, i)));
-	fprintf(output, "%d\n", vertex_get_index(vertex_array_list_get(ans, vertex_array_list_len(ans) - 1)));
-	fclose(output);
+	FILE* output = fopen(OUTPUT_STREAM_FILE, "r");
+	char line[CHECK_LINE_SIZE] = {'\0'};
+	fgets(line, CHECK_LINE_SIZE, output);
 	
-	output = fopen(OUTPUT_STREAM_FILE, "r");
-	char line[50] = {'\0'};
-	fgets(line, 50, output);
-	
-	EXPECT_EQ(strcmp(line, "0 2 4 3\n"), 0);
-	
-	graph_del(graph);
-	vertex_array_list_del(ans);
-	
+	EXPECT_EQ(strcmp(line, "1 3 4 2 5 6 7\n"), 0);
+
 	remove(INPUT_STREAM_FILE);
 	remove(OUTPUT_STREAM_FILE);
 }
 
-TEST(pre_order_graph_traversal, example_test2){
-	FILE* input = fopen(INPUT_STREAM_FILE, "w");
 
-	fprintf(input, "10\n"			\
-					"0 5 7 8 9\n"	\
-					"1 3 5 6 8 9\n"	\
-					"2 4 7\n"		\
-					"3 6 8 9\n"		\
-					"4 7 8\n"		\
-					"5 7\n" 		\
-					"6 7\n" 		\
-					"7 8\n" 		\
-					"8 9\n"			\
-					"9\n");
+TEST(train_organize_functional_test, user_example_task_test){
+	FILE* input = fopen(INPUT_STREAM_FILE, "w");
+	fprintf(input, "5 10 2\n"	\
+					"5 3 6 2 1\n"	\
+					"2\n"	\
+					"2 3\n"	\
+					"3 5\n");
 	fclose(input);
 	
-	input = fopen(INPUT_STREAM_FILE, "r");
-	FILE* output = fopen(OUTPUT_STREAM_FILE, "w");
+	organize_train_carriges(INPUT_STREAM_FILE, OUTPUT_STREAM_FILE);
 	
-	Graph* graph = graph_parse_graph_adjacency_list(input);
-	VertexArrayList* ans = graph_pre_order_traversal(graph, 0);
-	for (int i = 0; i < vertex_array_list_len(ans) - 1; i++)
-		fprintf(output, "%d ", vertex_get_index(vertex_array_list_get(ans, i)));
-	fprintf(output, "%d\n", vertex_get_index(vertex_array_list_get(ans, vertex_array_list_len(ans) - 1)));
-	fclose(output);
+	FILE* output = fopen(OUTPUT_STREAM_FILE, "r");
+	char line[CHECK_LINE_SIZE] = {'\0'};
+	fgets(line, CHECK_LINE_SIZE, output);
 	
-	output = fopen(OUTPUT_STREAM_FILE, "r");
-	char line[50] = {'\0'};
-	fgets(line, 50, output);
-	
-	EXPECT_EQ(strcmp(line, "0 5 1 3 6 7 2 4 8 9\n"), 0);
-	
-	graph_del(graph);
-	vertex_array_list_del(ans);
-	
+	EXPECT_EQ(strcmp(line, "1 2 5\n"), 0);
+
 	remove(INPUT_STREAM_FILE);
 	remove(OUTPUT_STREAM_FILE);
 }
 
-TEST(pre_order_graph_traversal, binary_tree_test1){
+TEST(train_organize_functional_test_one_carriage_without_link, enough_value_test){
 	FILE* input = fopen(INPUT_STREAM_FILE, "w");
-
-	fprintf(input, "8\n"		\
-					"0 1 2\n"	\
-					"1 3 4\n"	\
-					"3\n"		\
-					"4 5\n"		\
-					"5\n"		\
-					"2 6 8\n"	\
-					"6\n" 		\
-					"8\n");
+	fprintf(input, "1 10 0\n"	\
+					"5\n"	\
+					"0\n");
 	fclose(input);
 	
-	input = fopen(INPUT_STREAM_FILE, "r");
-	FILE* output = fopen(OUTPUT_STREAM_FILE, "w");
+	organize_train_carriges(INPUT_STREAM_FILE, OUTPUT_STREAM_FILE);
 	
-	Graph* graph = graph_parse_graph_adjacency_list(input);
-	VertexArrayList* ans = graph_pre_order_traversal(graph, 0);
-	for (int i = 0; i < vertex_array_list_len(ans) - 1; i++)
-		fprintf(output, "%d ", vertex_get_index(vertex_array_list_get(ans, i)));
-	fprintf(output, "%d\n", vertex_get_index(vertex_array_list_get(ans, vertex_array_list_len(ans) - 1)));
-	fclose(output);
+	FILE* output = fopen(OUTPUT_STREAM_FILE, "r");
+	char line[CHECK_LINE_SIZE] = {'\0'};
+	fgets(line, CHECK_LINE_SIZE, output);
 	
-	output = fopen(OUTPUT_STREAM_FILE, "r");
-	char line[50] = {'\0'};
-	fgets(line, 50, output);
-	
-	EXPECT_EQ(strcmp(line, "0 1 3 4 5 2 6 8\n"), 0);
-	
-	graph_del(graph);
-	vertex_array_list_del(ans);
-	
+	EXPECT_EQ(strcmp(line, "1\n"), 0);
+
 	remove(INPUT_STREAM_FILE);
 	remove(OUTPUT_STREAM_FILE);
 }
 
-TEST(pre_order_graph_traversal, binary_tree_test){
+TEST(train_organize_functional_test_one_carriage_without_link, too_big_value_test){
 	FILE* input = fopen(INPUT_STREAM_FILE, "w");
-
-	fprintf(input, "8\n"		\
-					"0 1 2\n"	\
-					"1 3 4\n"	\
-					"3\n"		\
-					"4 5\n"		\
-					"5\n"		\
-					"2 6 8\n"	\
-					"6\n" 		\
-					"8\n");
+	fprintf(input, "1 10 0\n"	\
+					"10\n"	\
+					"0\n");
 	fclose(input);
 	
-	input = fopen(INPUT_STREAM_FILE, "r");
-	FILE* output = fopen(OUTPUT_STREAM_FILE, "w");
+	organize_train_carriges(INPUT_STREAM_FILE, OUTPUT_STREAM_FILE);
 	
-	Graph* graph = graph_parse_graph_adjacency_list(input);
-	VertexArrayList* ans = graph_pre_order_traversal(graph, 0);
-	for (int i = 0; i < vertex_array_list_len(ans) - 1; i++)
-		fprintf(output, "%d ", vertex_get_index(vertex_array_list_get(ans, i)));
-	fprintf(output, "%d\n", vertex_get_index(vertex_array_list_get(ans, vertex_array_list_len(ans) - 1)));
-	fclose(output);
-	
-	output = fopen(OUTPUT_STREAM_FILE, "r");
-	char line[50] = {'\0'};
-	fgets(line, 50, output);
-	
-	EXPECT_EQ(strcmp(line, "0 1 3 4 5 2 6 8\n"), 0);
-	
-	graph_del(graph);
-	vertex_array_list_del(ans);
-	
-	remove(INPUT_STREAM_FILE);
-	remove(OUTPUT_STREAM_FILE);
-}
-
-TEST(pre_order_graph_traversal, looped_graph_test){
-	FILE* input = fopen(INPUT_STREAM_FILE, "w");
-
-	fprintf(input, "8\n"			\
-					"0 1 3\n"		\
-					"1 2\n"			\
-					"2 6\n"			\
-					"3 6 8\n"		\
-					"4 3 7\n"		\
-					"6 2 0 3\n"		\
-					"7 3 2\n"		\
-					"8\n");
-	fclose(input);
-	
-	input = fopen(INPUT_STREAM_FILE, "r");
-	FILE* output = fopen(OUTPUT_STREAM_FILE, "w");
-	
-	Graph* graph = graph_parse_graph_adjacency_list(input);
-	VertexArrayList* ans = graph_pre_order_traversal(graph, 0);
-	for (int i = 0; i < vertex_array_list_len(ans) - 1; i++)
-		fprintf(output, "%d ", vertex_get_index(vertex_array_list_get(ans, i)));
-	fprintf(output, "%d\n", vertex_get_index(vertex_array_list_get(ans, vertex_array_list_len(ans) - 1)));
-	fclose(output);
-	
-	output = fopen(OUTPUT_STREAM_FILE, "r");
-	char line[50] = {'\0'};
-	fgets(line, 50, output);
-	
-	EXPECT_EQ(strcmp(line, "0 1 2 6 3 4 7 8\n"), 0);
-	
-	graph_del(graph);
-	vertex_array_list_del(ans);
-	
-	remove(INPUT_STREAM_FILE);
-	remove(OUTPUT_STREAM_FILE);
-}
-
-TEST(pre_order_graph_traversal, disconected_graph_test){
-	FILE* input = fopen(INPUT_STREAM_FILE, "w");
-
-	fprintf(input, "8\n"			\
-					"0 1 7\n"		\
-					"1 3\n"			\
-					"3 6 7\n"		\
-					"6 0\n"			\
-					"5 9 8\n"		\
-					"7 3 0\n"		\
-					"8\n"			\
-					"9 5\n");
-	fclose(input);
-	
-	input = fopen(INPUT_STREAM_FILE, "r");
-	FILE* output = fopen(OUTPUT_STREAM_FILE, "w");
-	
-	Graph* graph = graph_parse_graph_adjacency_list(input);
-	VertexArrayList* ans = graph_pre_order_traversal(graph, 0);
-	for (int i = 0; i < vertex_array_list_len(ans) - 1; i++)
-		fprintf(output, "%d ", vertex_get_index(vertex_array_list_get(ans, i)));
-	fprintf(output, "%d\n", vertex_get_index(vertex_array_list_get(ans, vertex_array_list_len(ans) - 1)));
-	fclose(output);
-	
-	output = fopen(OUTPUT_STREAM_FILE, "r");
-	char line[50] = {'\0'};
-	fgets(line, 50, output);
-	
-	EXPECT_EQ(strcmp(line, "0 1 3 6 7\n"), 0);
-	
-	graph_del(graph);
-	vertex_array_list_del(ans);
-	
-	remove(INPUT_STREAM_FILE);
-	remove(OUTPUT_STREAM_FILE);
-}
-
-TEST(pre_order_graph_traversal, disconected_graph_determined_start_test){
-	FILE* input = fopen(INPUT_STREAM_FILE, "w");
-
-	fprintf(input, "4\n"			\
-					"0\n"			\
-					"1 2 6\n"		\
-					"2\n"			\
-					"3 1\n"			\
-					"6 2\n");
-	fclose(input);
-	
-	input = fopen(INPUT_STREAM_FILE, "r");
-	FILE* output = fopen(OUTPUT_STREAM_FILE, "w");
-	
-	Graph* graph = graph_parse_graph_adjacency_list(input);
-	VertexArrayList* ans = graph_pre_order_traversal(graph, 0);
-	for (int i = 0; i < vertex_array_list_len(ans) - 1; i++)
-		fprintf(output, "%d ", vertex_get_index(vertex_array_list_get(ans, i)));
-	fprintf(output, "%d\n", vertex_get_index(vertex_array_list_get(ans, vertex_array_list_len(ans) - 1)));
-	fclose(output);
-	
-	output = fopen(OUTPUT_STREAM_FILE, "r");
-	char line[50] = {'\0'};
-	fgets(line, 50, output);
+	FILE* output = fopen(OUTPUT_STREAM_FILE, "r");
+	char line[CHECK_LINE_SIZE] = {'\0'};
+	fgets(line, CHECK_LINE_SIZE, output);
 	
 	EXPECT_EQ(strcmp(line, "0\n"), 0);
-	
-	graph_del(graph);
-	vertex_array_list_del(ans);
-	
+
 	remove(INPUT_STREAM_FILE);
 	remove(OUTPUT_STREAM_FILE);
 }
+
+TEST(train_organize_functional_test_two_carriages_without_link, enough_value_test){
+	FILE* input = fopen(INPUT_STREAM_FILE, "w");
+	fprintf(input, "2 10 0\n"	\
+					"5 4\n"	\
+					"0\n");
+	fclose(input);
+	
+	organize_train_carriges(INPUT_STREAM_FILE, OUTPUT_STREAM_FILE);
+	
+	FILE* output = fopen(OUTPUT_STREAM_FILE, "r");
+	char line[CHECK_LINE_SIZE] = {'\0'};
+	fgets(line, CHECK_LINE_SIZE, output);
+	
+	EXPECT_EQ(strcmp(line, "1 2\n"), 0);
+
+	remove(INPUT_STREAM_FILE);
+	remove(OUTPUT_STREAM_FILE);
+}
+
+TEST(train_organize_functional_test_two_carriages_without_link, too_big_value_test){
+	FILE* input = fopen(INPUT_STREAM_FILE, "w");
+	fprintf(input, "2 10 0\n"	\
+					"5 5\n"	\
+					"0\n");
+	fclose(input);
+	
+	organize_train_carriges(INPUT_STREAM_FILE, OUTPUT_STREAM_FILE);
+	
+	FILE* output = fopen(OUTPUT_STREAM_FILE, "r");
+	char line[CHECK_LINE_SIZE] = {'\0'};
+	fgets(line, CHECK_LINE_SIZE, output);
+	
+	EXPECT_EQ(strcmp(line, "0\n"), 0);
+
+	remove(INPUT_STREAM_FILE);
+	remove(OUTPUT_STREAM_FILE);
+}
+
+TEST(train_organize_functional_test_two_carriages_with_link, enough_value_test){
+	FILE* input = fopen(INPUT_STREAM_FILE, "w");
+	fprintf(input, "2 10 0\n"	\
+					"5 4\n"	\
+					"1\n"	\
+					"1 2\n");
+	fclose(input);
+	
+	organize_train_carriges(INPUT_STREAM_FILE, OUTPUT_STREAM_FILE);
+	
+	FILE* output = fopen(OUTPUT_STREAM_FILE, "r");
+	char line[CHECK_LINE_SIZE] = {'\0'};
+	fgets(line, CHECK_LINE_SIZE, output);
+	
+	EXPECT_EQ(strcmp(line, "1 2\n"), 0);
+
+	remove(INPUT_STREAM_FILE);
+	remove(OUTPUT_STREAM_FILE);
+}
+
+TEST(train_organize_functional_test_two_carriages_with_link, too_big_value_test){
+	FILE* input = fopen(INPUT_STREAM_FILE, "w");
+	fprintf(input, "2 10 0\n"	\
+					"5 5\n"		\
+					"1\n"		\
+					"1 2\n");
+	fclose(input);
+	
+	organize_train_carriges(INPUT_STREAM_FILE, OUTPUT_STREAM_FILE);
+	
+	FILE* output = fopen(OUTPUT_STREAM_FILE, "r");
+	char line[CHECK_LINE_SIZE] = {'\0'};
+	fgets(line, CHECK_LINE_SIZE, output);
+	
+	EXPECT_EQ(strcmp(line, "0\n"), 0);
+
+	remove(INPUT_STREAM_FILE);
+	remove(OUTPUT_STREAM_FILE);
+}
+
+TEST(train_organize_functional_test_two_carriages_with_link, inkorrect_link_test){
+	FILE* input = fopen(INPUT_STREAM_FILE, "w");
+	fprintf(input, "2 10 0\n"	\
+					"5 3\n"		\
+					"1\n"		\
+					"2 1\n");
+	fclose(input);
+	
+	organize_train_carriges(INPUT_STREAM_FILE, OUTPUT_STREAM_FILE);
+	
+	FILE* output = fopen(OUTPUT_STREAM_FILE, "r");
+	char line[CHECK_LINE_SIZE] = {'\0'};
+	fgets(line, CHECK_LINE_SIZE, output);
+	
+	EXPECT_EQ(strcmp(line, "0\n"), 0);
+
+	remove(INPUT_STREAM_FILE);
+	remove(OUTPUT_STREAM_FILE);
+}
+
+TEST(train_organize_functional_test_two_carriages_big_k, k_equal_to_w){
+	FILE* input = fopen(INPUT_STREAM_FILE, "w");
+	fprintf(input, "2 10 2\n"	\
+					"2 3\n"	\
+					"0\n");
+	fclose(input);
+	
+	organize_train_carriges(INPUT_STREAM_FILE, OUTPUT_STREAM_FILE);
+	
+	FILE* output = fopen(OUTPUT_STREAM_FILE, "r");
+	char line[CHECK_LINE_SIZE] = {'\0'};
+	fgets(line, CHECK_LINE_SIZE, output);
+	
+	EXPECT_EQ(strcmp(line, "1\n"), 0);
+
+	remove(INPUT_STREAM_FILE);
+	remove(OUTPUT_STREAM_FILE);
+}
+
+TEST(train_organize_functional_test_two_carriages_big_k, too_big_value_sum_test){
+	FILE* input = fopen(INPUT_STREAM_FILE, "w");
+	fprintf(input, "2 10 2\n"	\
+					"5 5\n"	\
+					"0\n");
+	fclose(input);
+	
+	organize_train_carriges(INPUT_STREAM_FILE, OUTPUT_STREAM_FILE);
+	
+	FILE* output = fopen(OUTPUT_STREAM_FILE, "r");
+	char line[CHECK_LINE_SIZE] = {'\0'};
+	fgets(line, CHECK_LINE_SIZE, output);
+	
+	EXPECT_EQ(strcmp(line, "1\n"), 0);
+
+	remove(INPUT_STREAM_FILE);
+	remove(OUTPUT_STREAM_FILE);
+}
+
+TEST(train_organize_functional_test_two_carriages_big_k, too_big_value_test){
+	FILE* input = fopen(INPUT_STREAM_FILE, "w");
+	fprintf(input, "2 10 2\n"	\
+					"10 5\n"	\
+					"0\n");
+	fclose(input);
+	
+	organize_train_carriges(INPUT_STREAM_FILE, OUTPUT_STREAM_FILE);
+	
+	FILE* output = fopen(OUTPUT_STREAM_FILE, "r");
+	char line[CHECK_LINE_SIZE] = {'\0'};
+	fgets(line, CHECK_LINE_SIZE, output);
+	
+	EXPECT_EQ(strcmp(line, "0\n"), 0);
+
+	remove(INPUT_STREAM_FILE);
+	remove(OUTPUT_STREAM_FILE);
+}
+
+TEST(train_organize_functional_test_three_carriages_without_link, too_big_value_test){
+	FILE* input = fopen(INPUT_STREAM_FILE, "w");
+	fprintf(input, "3 3 0\n"	\
+					"1 2 3\n"	\
+					"0\n");
+	fclose(input);
+	
+	organize_train_carriges(INPUT_STREAM_FILE, OUTPUT_STREAM_FILE);
+	
+	FILE* output = fopen(OUTPUT_STREAM_FILE, "r");
+	char line[CHECK_LINE_SIZE] = {'\0'};
+	fgets(line, CHECK_LINE_SIZE, output);
+	
+	EXPECT_EQ(strcmp(line, "0\n"), 0);
+
+	remove(INPUT_STREAM_FILE);
+	remove(OUTPUT_STREAM_FILE);
+}
+
+TEST(train_organize_functional_test_three_carriages_without_link, too_small_k){
+	FILE* input = fopen(INPUT_STREAM_FILE, "w");
+	fprintf(input, "3 3 1\n"	\
+					"1 2 3\n"	\
+					"0\n");
+	fclose(input);
+	
+	organize_train_carriges(INPUT_STREAM_FILE, OUTPUT_STREAM_FILE);
+	
+	FILE* output = fopen(OUTPUT_STREAM_FILE, "r");
+	char line[CHECK_LINE_SIZE] = {'\0'};
+	fgets(line, CHECK_LINE_SIZE, output);
+	
+	EXPECT_EQ(strcmp(line, "0\n"), 0);
+
+	remove(INPUT_STREAM_FILE);
+	remove(OUTPUT_STREAM_FILE);
+}
+
+TEST(train_organize_functional_test_three_carriages_without_link, too_big_sum_and_k_smaller_w){
+	FILE* input = fopen(INPUT_STREAM_FILE, "w");
+	fprintf(input, "3 3 2\n"	\
+					"1 2 3\n"	\
+					"0\n");
+	fclose(input);
+	
+	organize_train_carriges(INPUT_STREAM_FILE, OUTPUT_STREAM_FILE);
+	
+	FILE* output = fopen(OUTPUT_STREAM_FILE, "r");
+	char line[CHECK_LINE_SIZE] = {'\0'};
+	fgets(line, CHECK_LINE_SIZE, output);
+	
+	EXPECT_EQ(strcmp(line, "1\n"), 0);
+
+	remove(INPUT_STREAM_FILE);
+	remove(OUTPUT_STREAM_FILE);
+}
+
+
+TEST(train_organize_functional_test_three_carriages_without_link, too_big_sum_and_k_equal_to_w){
+	FILE* input = fopen(INPUT_STREAM_FILE, "w");
+	fprintf(input, "3 3 3\n"	\
+					"1 2 3\n"	\
+					"0\n");
+	fclose(input);
+	
+	organize_train_carriges(INPUT_STREAM_FILE, OUTPUT_STREAM_FILE);
+	
+	FILE* output = fopen(OUTPUT_STREAM_FILE, "r");
+	char line[CHECK_LINE_SIZE] = {'\0'};
+	fgets(line, CHECK_LINE_SIZE, output);
+	
+	EXPECT_EQ(strcmp(line, "1\n"), 0);
+
+	remove(INPUT_STREAM_FILE);
+	remove(OUTPUT_STREAM_FILE);
+}
+
+TEST(train_organize_functional_test_three_carriages_without_link, train_sum_equal_to_d){
+	FILE* input = fopen(INPUT_STREAM_FILE, "w");
+	fprintf(input, "3 6 0\n"	\
+					"1 2 3\n"	\
+					"0\n");
+	fclose(input);
+	
+	organize_train_carriges(INPUT_STREAM_FILE, OUTPUT_STREAM_FILE);
+	
+	FILE* output = fopen(OUTPUT_STREAM_FILE, "r");
+	char line[CHECK_LINE_SIZE] = {'\0'};
+	fgets(line, CHECK_LINE_SIZE, output);
+	
+	EXPECT_EQ(strcmp(line, "0\n"), 0);
+
+	remove(INPUT_STREAM_FILE);
+	remove(OUTPUT_STREAM_FILE);
+}
+
+TEST(train_organize_functional_test_three_carriages_with_link, one_directional_link){
+	FILE* input = fopen(INPUT_STREAM_FILE, "w");
+	fprintf(input, "3 7 0\n"	\
+					"1 2 3\n"	\
+					"1\n"		\
+					"2 3");
+	fclose(input);
+	
+	organize_train_carriges(INPUT_STREAM_FILE, OUTPUT_STREAM_FILE);
+	
+	FILE* output = fopen(OUTPUT_STREAM_FILE, "r");
+	char line[CHECK_LINE_SIZE] = {'\0'};
+	fgets(line, CHECK_LINE_SIZE, output);
+	
+	EXPECT_EQ(strcmp(line, "1 2 3\n"), 0);
+
+	remove(INPUT_STREAM_FILE);
+	remove(OUTPUT_STREAM_FILE);
+}
+
+TEST(train_organize_functional_test_three_carriages_with_link, reverce_directional_link){
+	FILE* input = fopen(INPUT_STREAM_FILE, "w");
+	fprintf(input, "3 7 0\n"	\
+					"1 2 3\n"	\
+					"1\n"		\
+					"3 2");
+	fclose(input);
+	
+	organize_train_carriges(INPUT_STREAM_FILE, OUTPUT_STREAM_FILE);
+	
+	FILE* output = fopen(OUTPUT_STREAM_FILE, "r");
+	char line[CHECK_LINE_SIZE] = {'\0'};
+	fgets(line, CHECK_LINE_SIZE, output);
+	
+	EXPECT_EQ(strcmp(line, "1 3 2\n"), 0);
+
+	remove(INPUT_STREAM_FILE);
+	remove(OUTPUT_STREAM_FILE);
+}
+
+
+
 
 
 /*
+[----------] 1 test from train_organize_stress_test
+[ RUN      ] train_organize_stress_test.runing_time_stress_test
+[       OK ] train_organize_stress_test.runing_time_stress_test (1998120 ms)
+[----------] 1 test from train_organize_stress_test (1998165 ms total)
 
-[----------] 1 test from pre_order_graph_traversal_stress_execution
-[ RUN      ] pre_order_graph_traversal_stress_execution.memory_stress_test
-[       OK ] pre_order_graph_traversal_stress_execution.memory_stress_test (519 ms)
-[----------] 1 test from pre_order_graph_traversal_stress_execution (520 ms total)
+time:
+real    33m18.852s
+user    33m5.069s
+sys     0m3.627s
 
-valgrind ./testing/testing 
-==13572== Memcheck, a memory error detector
-==13572== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
-==13572== Using Valgrind-3.17.0 and LibVEX; rerun with -h for copyright info
-==13572== Command: ./testing/testing
-
-==13572== HEAP SUMMARY:
-==13572==     in use at exit: 545,832 bytes in 31 blocks
-==13572==   total heap usage: 33,689 allocs, 33,658 frees, 85,390,331 bytes allocated
-
-==13572== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+valgrind:
+==77843== 
+==77843== HEAP SUMMARY:
+==77843==     in use at exit: 231,344 bytes in 38 blocks
+==77843==   total heap usage: 221,455 allocs, 221,417 frees, 16,982,885,907 bytes allocated
+==77843== 
+==77843== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
 */
 
-TEST(pre_order_graph_traversal_stress_execution, memory_stress_test){
+TEST(train_organize_stress_test, runing_time_stress_test){
 	srand(time(NULL));
 	
-	unsigned long sum_memory_size = 512 * 1024; // 512Mib
+	unsigned long max_time_range_for_node = 100;
 	
-	// init graph and answer list
+	unsigned long sum_memory_size = 200 * 1024; // 200Mib
+	
+//	init graph and answer list
 	unsigned int init_memory = sizeof(Graph) + sizeof(Graph*) + sizeof(VertexArrayList) + sizeof(VertexArrayList*);
 	
-	// adding vertex into graph vertex list
+// 	adding vertex into graph vertex list
 	unsigned int node_creation = sizeof(Vertex) + sizeof(VertexArrayList);
 	
-	// links into each node in neighbours vertex list
+// 	links into each node in neighbours vertex list
 	unsigned int one_link_memory = 2 * sizeof(Vertex*);
 	
-	// 1/2 of all memory to links
-	unsigned int links_amount = sum_memory_size / 2 * 1 / one_link_memory ;
+// 	1/2 of all memory to links
+	unsigned int links_amount;
 	
-	unsigned int nodes_amount = (sum_memory_size - init_memory - links_amount*one_link_memory)/node_creation;
+	unsigned int nodes_amount = links_amount = (sum_memory_size - init_memory)/(node_creation + one_link_memory);
 	unsigned int links_in_one_node = links_amount / nodes_amount;
 	
+	unsigned max_time = nodes_amount * max_time_range_for_node / 2;
+	
 	FILE* input = fopen(INPUT_STREAM_FILE, "w");
-	fprintf(input, "%u\n", nodes_amount);
+	fprintf(input, "%u %u %u\n", nodes_amount, max_time, nodes_amount/10*8);
 	
 	for (unsigned node_number = 0; node_number < nodes_amount; node_number++){
-		fprintf(input, "%d", node_number);
-		for (unsigned links_amount = 0; links_amount <= links_in_one_node; links_amount++)
-			fprintf(input, " %d", rand()%nodes_amount);
+		if (node_number < nodes_amount - 1)
+			fprintf(input, "%lu ", rand() % max_time_range_for_node);
+		else
+			fprintf(input, "%lu\n", rand() % max_time_range_for_node);
+	}
+	
+	fprintf(input, "%d\n", nodes_amount / 3);
+	
+	for (unsigned node_number = 0; node_number < nodes_amount / 3; node_number++){
+		unsigned val = rand()%nodes_amount;
+		unsigned prev_val = val;
+		fprintf(input, "%d", val);
+		while ((val = rand()%nodes_amount) == prev_val);
+		fprintf(input, " %d", val);
 		fprintf(input, "\n");
 	}
 	fclose(input);
 	
-	input = fopen(INPUT_STREAM_FILE, "r");
-	FILE* output = fopen(OUTPUT_STREAM_FILE, "w");
-	
-	Graph* graph = graph_parse_graph_adjacency_list(input);
-	VertexArrayList* ans = graph_pre_order_traversal(graph, 0);
-	for (int i = 0; i < vertex_array_list_len(ans) - 1; i++)
-		fprintf(output, "%d ", vertex_get_index(vertex_array_list_get(ans, i)));
-	fprintf(output, "%d\n", vertex_get_index(vertex_array_list_get(ans, vertex_array_list_len(ans) - 1)));
-	fclose(output);
-	
-	graph_del(graph);
-	vertex_array_list_del(ans);
+	organize_train_carriges(INPUT_STREAM_FILE, OUTPUT_STREAM_FILE);
 
 	remove(INPUT_STREAM_FILE);
 	remove(OUTPUT_STREAM_FILE);
