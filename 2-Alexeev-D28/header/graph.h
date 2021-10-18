@@ -62,6 +62,15 @@ Vertex* graph_find_non_recurring_vertex(Graph* graph,
 						int start_index,
 						int(*vertex_meta_cmp)(void* meta1, void* meta2));
 
+
+/* 
+ Addiction for graph_find_specific_path function parameter:
+ 
+ check_specification_fun(VertexArrayList* ans) - function for check
+ result list specification. It used to check list for specific rule. 
+ 
+ ans - list whic one should be checked
+*/
 VertexArrayList* graph_find_specific_path(Graph* graph,
 						unsigned start_index,
 						unsigned min_path_len,
