@@ -7,3 +7,5 @@ testing/obj/
 testing/testing
 src/Lab-C.c
 src/Lab-C.cc
+*.txt
+!input.txt
