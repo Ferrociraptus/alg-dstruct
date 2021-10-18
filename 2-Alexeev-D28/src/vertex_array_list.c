@@ -9,19 +9,32 @@
 
 struct __vertex{
 	unsigned int index;
-	VertexMarker marker;
+	
+	//for running into graph
+	RuntimeVertexMarker run_marker;
+	
+	//for iteration finding values into graph
+	StatusVertexMarker status_marker;
+	
 	VertexArrayList* neighbours;
+	VertexArrayList* hard_link_neighbours;
+	unsigned block_counter;
+	void* meta_info;
 };
 
-Vertex* __vertex_new(unsigned int vertex_index){
+Vertex* __vertex_new ( unsigned int vertex_index, void* vertex_meta_info ){
 	Vertex* vertex = (Vertex*)malloc(sizeof(Vertex));
 	
 	if (vertex == NULL)
 		return NULL;
 	
 	vertex->index = vertex_index;
-	vertex->marker = VERTEX_AVAILABLE;
+	vertex->run_marker = VERTEX_AVAILABLE;
+	vertex->status_marker = VERTEX_FREE;
 	vertex->neighbours = vertex_array_list_new(0);
+	vertex->hard_link_neighbours = vertex_array_list_new(0);
+	vertex->meta_info = vertex_meta_info;
+	vertex->block_counter = 0;
 	
 	if (vertex->neighbours == NULL){
 		free(vertex);
@@ -33,12 +46,65 @@ Vertex* __vertex_new(unsigned int vertex_index){
 
 void __vertex_del(Vertex* vertex){
 	vertex_array_list_del(vertex->neighbours);
+	vertex_array_list_del(vertex->hard_link_neighbours);
+	free(vertex->meta_info);
 	free(vertex);
 }
 
 unsigned vertex_get_index(Vertex* vertex){
 	return vertex->index;
 }
+
+void* vertex_get_meta_info(Vertex* vertex){
+	return vertex->meta_info;
+}
+
+void vertex_set_status(Vertex* vertex, StatusVertexMarker marker){
+	if (vertex == NULL)
+		return;
+	
+	if (marker == VERTEX_IN_USE){
+		vertex->status_marker = marker;
+		vertex->block_counter++;
+	}
+	else {
+		if (vertex->block_counter > 0)
+			vertex->block_counter--;
+		
+		if (vertex->block_counter == 0)
+			vertex->status_marker = marker;
+	}
+	
+	unsigned len = vertex_array_list_len(vertex->hard_link_neighbours);
+	for (unsigned i = 0; i < len; i++){
+		Vertex* neighbour = vertex_array_list_get(vertex->hard_link_neighbours, i);
+		vertex_set_status(neighbour, marker);
+	}
+}
+
+/*
+	unsigned int index;
+	
+	//for running into graph
+	RuntimeVertexMarker run_marker;
+	
+	//for iteration finding values into graph
+	StatusVertexMarker status_marker;
+	
+	VertexArrayList* neighbours;
+	VertexArrayList* hard_link_neighbours;
+	unsigned mutex_counter;
+	void* meta_info; 
+ */
+
+void vertex_print_info(Vertex* vertex, FILE* stream){
+	fprintf(stream, "Vertex %d:\n", vertex->index);
+	fprintf(stream, "\t-status marker: %s\n", ((vertex->status_marker == VERTEX_FREE)? "VERTEX_FREE": "VERTEX_IN_USE"));
+	fprintf(stream, "\t-neighbours: %d\n", vertex_array_list_len(vertex->neighbours));
+	fprintf(stream, "\t-hard link neighbours: %d\n", vertex_array_list_len(vertex->hard_link_neighbours));
+	fprintf(stream, "\t-blocks amount: %d\n", vertex->block_counter);
+}
+
 
 struct __vertex_array_list{
 	unsigned int size; //size of allocated memory
@@ -206,12 +272,15 @@ static void __quicksort(Vertex** array, int size, int (*comparing_fun)(Vertex*, 
 	__quicksort(array + l + 1, size - l - 1, comparing_fun);
 }
 
-void vertex_array_list_vertex_index_sort(VertexArrayList* list){
-	__quicksort(list->arr, list->len, __vertex_comparing);
+void vertex_array_list_vertex_index_sort(VertexArrayList* list, int (*vertex_meta_cmp)(Vertex*, Vertex*)){
+	if (vertex_meta_cmp != NULL)
+		__quicksort(list->arr, list->len, vertex_meta_cmp);
+	else
+		__quicksort(list->arr, list->len, __vertex_comparing);
 }
 
-void vertex_array_list_comb(VertexArrayList* list){
-	vertex_array_list_vertex_index_sort(list);
+void vertex_array_list_comb(VertexArrayList* list, int (*vertex_meta_cmp)(Vertex*, Vertex*)){
+	vertex_array_list_vertex_index_sort(list,vertex_meta_cmp);
 	for (int i = 0; i + 1 < vertex_array_list_len(list); i++){
 		Vertex* vertex1 = vertex_array_list_get(list, i);
 		Vertex* vertex2 = vertex_array_list_get(list, i + 1);
@@ -219,3 +288,20 @@ void vertex_array_list_comb(VertexArrayList* list){
 			vertex_array_list_pop(list, i--);
 	}
 }
+
+void vertex_array_list_print_indexses(VertexArrayList* list, FILE* stream, const char* separator){
+	unsigned len = list->len;
+	
+	for (unsigned i = 0; i < len; i++){
+		Vertex* vertex = vertex_array_list_get(list, i);
+		if (vertex == NULL)
+			fprintf(stream, "NULL");
+		else
+			fprintf(stream, "%d", vertex->index);
+		
+		if (i < len-1)
+			fprintf(stream, "%s", separator);
+	}
+	putc('\n', stream);
+}
+

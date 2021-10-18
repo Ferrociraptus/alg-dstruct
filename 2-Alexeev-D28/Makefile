@@ -15,7 +15,7 @@ OBJECTS=$(SRC_FILES:$(SRC_DIR)/%.c=$(BIN_DIR)/%.o)
 
 TESTING_DIR = ./testing
 
-EXECUTABLE = lab_3
+EXECUTABLE = lab_4
 
 all: $(EXECUTABLE)
 
