@@ -83,9 +83,11 @@ int organize_train_carriges(const char* train_spec_file,
 	Graph* graph = parse_train_spec_to_graph(input);
 	
 	// find solving
-	Vertex* train_head = vertex_array_list_get(*((VertexArrayList**)graph), 0);
-	vertex_set_status(train_head, VERTEX_IN_USE);
-	vertex_array_list_print_indexses(graph_find_specific_path(graph, 1, need_to_send, __is_answer_correct), output, " "); 
+	VertexArrayList* solve = graph_find_specific_path(graph, 1, need_to_send, __is_answer_correct);
+	if (solve != NULL)
+		vertex_array_list_print_indexses(solve, output, " "); 
+	else
+		fprintf(output, "0\n");
 	
 	graph_del(graph);
 	fclose(output);
