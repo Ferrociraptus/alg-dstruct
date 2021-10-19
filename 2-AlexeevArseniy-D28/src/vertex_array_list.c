@@ -82,21 +82,6 @@ void vertex_set_status(Vertex* vertex, StatusVertexMarker marker){
 	}
 }
 
-/*
-	unsigned int index;
-	
-	//for running into graph
-	RuntimeVertexMarker run_marker;
-	
-	//for iteration finding values into graph
-	StatusVertexMarker status_marker;
-	
-	VertexArrayList* neighbours;
-	VertexArrayList* hard_link_neighbours;
-	unsigned mutex_counter;
-	void* meta_info; 
- */
-
 void vertex_print_info(Vertex* vertex, FILE* stream){
 	fprintf(stream, "Vertex %d:\n", vertex->index);
 	fprintf(stream, "\t-status marker: %s\n", ((vertex->status_marker == VERTEX_FREE)? "VERTEX_FREE": "VERTEX_IN_USE"));
