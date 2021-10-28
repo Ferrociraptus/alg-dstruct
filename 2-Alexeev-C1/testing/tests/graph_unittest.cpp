@@ -1,3 +1,4 @@
+#include "sys/resource.h"
 #include "gtest/gtest.h"
 
 extern "C" {
@@ -5,6 +6,10 @@ extern "C" {
 #include <time.h>
 #include "graph.h"
 }
+
+#define ANSI_COLOR_YELLOW "\x1b[33m"
+#define ANSI_COLOR_RESET "\x1b[0m"
+#define GTEST_PRINTF_INFO(str,...) {fprintf(stderr, ANSI_COLOR_YELLOW "[   INFO   ] "); fprintf(stderr, str, __VA_ARGS__); fprintf(stderr, ANSI_COLOR_RESET);}
 
 /*
 OS: Fedora 34 (KDE Plasma) x86_64 
@@ -325,26 +330,42 @@ TEST(pre_order_graph_traversal, disconected_graph_determined_start_test){
 
 [----------] 1 test from pre_order_graph_traversal_stress_execution
 [ RUN      ] pre_order_graph_traversal_stress_execution.memory_stress_test
-[       OK ] pre_order_graph_traversal_stress_execution.memory_stress_test (519 ms)
-[----------] 1 test from pre_order_graph_traversal_stress_execution (520 ms total)
+[   INFO   ] Memory stack was increased to: 512Mib
+[   INFO   ] Vertex amount: 655358
+[       OK ] pre_order_graph_traversal_stress_execution.memory_stress_test (1852573 ms)
+[----------] 1 test from pre_order_graph_traversal_stress_execution (1867586 ms total)
 
-valgrind ./testing/testing 
-==13572== Memcheck, a memory error detector
-==13572== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
-==13572== Using Valgrind-3.17.0 and LibVEX; rerun with -h for copyright info
-==13572== Command: ./testing/testing
 
-==13572== HEAP SUMMARY:
-==13572==     in use at exit: 545,832 bytes in 31 blocks
-==13572==   total heap usage: 33,689 allocs, 33,658 frees, 85,390,331 bytes allocated
+valgrind:
+==233008== 
+==233008== HEAP SUMMARY:
+==233008==     in use at exit: 41,964,584 bytes in 31 blocks
+==233008==   total heap usage: 2,642,582 allocs, 2,642,551 frees, 430,928,425,445 bytes allocated
+==233008== 
+==233008== For lists of detected and suppressed errors, rerun with: -s
+==233008== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
 
-==13572== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+time:
+real    31m9.120s
+user    26m47.701s
+sys     3m20.295s
+
 */
 
 TEST(pre_order_graph_traversal_stress_execution, memory_stress_test){
+	rlimit rlim;
+	
+	// increasing stack size
+	if (getrlimit(RLIMIT_STACK, &rlim)) exit(1);
+	
+	rlim.rlim_cur = 512 * 1024 * 1024; // 512 Mib
+	
+	if (setrlimit(RLIMIT_STACK, &rlim)) exit(2);
+	GTEST_PRINTF_INFO("Memory stack was increased to: %luMib\n", rlim.rlim_cur /1024 /1024);
+	
 	srand(time(NULL));
 	
-	unsigned long sum_memory_size = 512 * 1024; // 512Mib
+	unsigned long sum_memory_size = 40 * 1024 * 1024; // 40Mib
 	
 	// init graph and answer list
 	unsigned int init_memory = sizeof(Graph) + sizeof(Graph*) + sizeof(VertexArrayList) + sizeof(VertexArrayList*);
@@ -360,6 +381,8 @@ TEST(pre_order_graph_traversal_stress_execution, memory_stress_test){
 	
 	unsigned int nodes_amount = (sum_memory_size - init_memory - links_amount*one_link_memory)/node_creation;
 	unsigned int links_in_one_node = links_amount / nodes_amount;
+	
+	GTEST_PRINTF_INFO("Vertex amount: %u\n", nodes_amount);
 	
 	FILE* input = fopen(INPUT_STREAM_FILE, "w");
 	fprintf(input, "%u\n", nodes_amount);
