@@ -77,7 +77,10 @@ static void* __vertex_list_realloc_for_elements_amount(VertexArrayList* list, un
 			return NULL;
 		
 		list->arr = new_ptr;
+		
 		list->size = alloc_size;
+		for (int i = list->len; i < list->size; i++)
+			list->arr[i] = NULL;
 	}
 	return list->arr;
 }

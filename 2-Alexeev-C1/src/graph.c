@@ -94,7 +94,6 @@ Graph* graph_parse_graph_adjacency_list(FILE* stream){
 	
 	while (1){
 		int parent_node_index, neighbour_node_index;
-		int scan_result = 0;
 		char line[250];
 		char* line_p = line;
 		
