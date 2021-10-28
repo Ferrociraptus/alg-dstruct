@@ -1,3 +1,4 @@
+#include "sys/resource.h"
 #include "gtest/gtest.h"
 
 extern "C" {
@@ -5,6 +6,10 @@ extern "C" {
 #include <time.h>
 #include "train_task_solving.h"
 }
+
+#define ANSI_COLOR_YELLOW "\x1b[33m"
+#define ANSI_COLOR_RESET "\x1b[0m"
+#define GTEST_PRINTF_INFO(str,...) {fprintf(stderr, ANSI_COLOR_YELLOW "[   INFO   ] "); fprintf(stderr, str, __VA_ARGS__); fprintf(stderr, ANSI_COLOR_RESET);}
 
 /*
 OS: Fedora 34 (KDE Plasma) x86_64 
@@ -458,6 +463,8 @@ TEST(train_organize_functional_test_three_carriages_with_link, reverce_direction
 [----------] 1 test from train_organize_stress_test
 [ RUN      ] train_organize_stress_test.runing_time_stress_test
 [       OK ] train_organize_stress_test.runing_time_stress_test (1998120 ms)
+[   INFO   ] Memory stack was increased to: 512Mib
+[   INFO   ] Vertex amount: 2559
 [----------] 1 test from train_organize_stress_test (1998165 ms total)
 
 time:
@@ -475,11 +482,21 @@ valgrind:
 */
 
 TEST(train_organize_stress_test, runing_time_stress_test){
+    rlimit rlim;
+    
+    // increasing stack size
+	if (getrlimit(RLIMIT_STACK, &rlim)) exit(1);
+	
+	rlim.rlim_cur = 512 * 1024 * 1024; // 512 Mib
+	
+	if (setrlimit(RLIMIT_STACK, &rlim)) exit(2);
+	GTEST_PRINTF_INFO("Memory stack was increased to: %luMib\n", rlim.rlim_cur /1024 /1024);
+    
 	srand(time(NULL));
 	
 	unsigned long max_time_range_for_node = 100;
 	
-	unsigned long sum_memory_size = 200 * 1024; // 200Mib
+	unsigned long sum_memory_size = 200 * 1024; // 200 Kib
 	
 //	init graph and answer list
 	unsigned int init_memory = sizeof(Graph) + sizeof(Graph*) + sizeof(VertexArrayList) + sizeof(VertexArrayList*);
@@ -494,8 +511,9 @@ TEST(train_organize_stress_test, runing_time_stress_test){
 	unsigned int links_amount;
 	
 	unsigned int nodes_amount = links_amount = (sum_memory_size - init_memory)/(node_creation + one_link_memory);
-	unsigned int links_in_one_node = links_amount / nodes_amount;
-	
+
+	GTEST_PRINTF_INFO("Vertex amount: %u\n", nodes_amount);
+    
 	unsigned max_time = nodes_amount * max_time_range_for_node / 2;
 	
 	FILE* input = fopen(INPUT_STREAM_FILE, "w");
