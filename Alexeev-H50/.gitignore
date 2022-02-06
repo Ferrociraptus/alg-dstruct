@@ -1,0 +1,11 @@
+.kdev4/
+.idea/
+.~lock*
+*.kdev4
+lab_1
+bin/*
+*.txt
+!input.txt
+*.csv
+*.odt
+*.ods
