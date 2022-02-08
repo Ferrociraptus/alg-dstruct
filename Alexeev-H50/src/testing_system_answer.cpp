@@ -3,10 +3,10 @@
 #define AATREE_H
 
 typedef struct _AABinaryTreeNode* AABinaryTree;
+void aa_binary_tree_init(AABinaryTree* tree);
 void aa_binary_tree_insert(AABinaryTree* tree_p, int value);
 void aa_binary_tree_remove(AABinaryTree* tree, int del_value);
 int aa_binary_tree_search(AABinaryTree tree, int value);
-void aa_binary_tree_print(AABinaryTree tree);
 
 #endif
 //--------------------------------------------------------
@@ -28,6 +28,23 @@ struct _AABinaryTreeNode {
 
 typedef struct _AABinaryTreeNode AABinaryTreeNode;
 
+static AABinaryTreeNode* bottom = NULL;
+static AABinaryTreeNode* last = NULL, *deleted = NULL;
+
+void aa_binary_tree_init(AABinaryTree* tree){
+	if (bottom == NULL){
+		bottom = (AABinaryTreeNode*)malloc(sizeof(AABinaryTreeNode));
+		if (bottom == NULL)
+			return;
+		bottom->value = 0;
+		bottom->depth = 0;
+		bottom->left = bottom;
+		bottom->right = bottom;
+		deleted = bottom;
+	}
+	*tree = NULL;
+}
+
 
 static AABinaryTreeNode* __aa_binary_treeNode_new(int value){
 	AABinaryTreeNode* node = (AABinaryTreeNode*)malloc(sizeof(AABinaryTreeNode));
@@ -35,43 +52,34 @@ static AABinaryTreeNode* __aa_binary_treeNode_new(int value){
 	if (node == NULL)
 		return NULL;
 	
-	node->depth = 0;
-	node->left = NULL;
-	node->right = NULL;
+	node->depth = 1;
+	node->left = bottom;
+	node->right = bottom;
 	node->value = value;
 	return node;
 }
 
 
 static AABinaryTreeNode* __aa_binary_treeNode_split(AABinaryTree tree){
-	if (tree == NULL)
-		return NULL;
-	else if (tree->right == NULL || tree->right->right == NULL)
-		return tree;
-	else if (tree->depth == tree->right->right->depth){
-       // Существует два правых горизонтальных ребра. Берем центральную вершину, «поднимаем» ее и возвращаем указатель на нее
-	   
-	   AABinaryTreeNode* right = tree->right;
-	   tree->right = right->left;
-	   right->left = tree;
-	   right->depth++;
-	   
-	   return right;
+	if (tree != bottom && tree->depth == tree->right->right->depth){
+	   AABinaryTreeNode* temp = tree;
+	   tree = tree->right;
+	   temp->right = tree->left;
+	   tree->left = temp;
+	   tree->depth++;
+	   return tree;
 	}
 	return tree;
 }
 
 
 static AABinaryTreeNode* __aa_binary_treeNode_skew(AABinaryTree tree){
-	if (tree == NULL)
-		return NULL;
-	else if (tree->left == NULL)
+	if (tree->left->depth == tree->depth){
+		AABinaryTreeNode* temp = tree;
+		tree = tree->left;
+		temp->left = tree->right;
+		tree->right = temp;
 		return tree;
-	else if (tree->left->depth == tree->depth){
-		AABinaryTreeNode* left = tree->left;
-		tree->left = left->right;
-		left->right = tree;
-		return left;
 	}
 	else
 		return tree;
@@ -79,7 +87,7 @@ static AABinaryTreeNode* __aa_binary_treeNode_skew(AABinaryTree tree){
 
 
 static AABinaryTreeNode* __aa_binary_tree_insert_node(AABinaryTree tree, AABinaryTreeNode* new_node){
-	if (tree == NULL)
+	if (tree == bottom || tree == NULL)
 		return new_node;
 	
 	if (new_node->value > tree->value){
@@ -103,81 +111,36 @@ void aa_binary_tree_insert(AABinaryTree* tree_p, int value){
 }
 
 
-static AABinaryTreeNode* __aa_binary_tree_decrease_level(AABinaryTree tree){
-	int left_depth = 0;
-	int right_depth = 0;
-	int need_depth;
-	
-	if (tree == NULL)
-		return tree;
-	
-	if (tree->left != NULL)
-		left_depth = tree->left->depth;
-	if (tree->right != NULL)
-		right_depth = tree->right->depth;
-
-	need_depth = ((left_depth <= right_depth) ? left_depth : right_depth);
-	if (need_depth < tree->depth){
-		tree->depth = need_depth;
-		if (need_depth < right_depth && tree->right != NULL)
-			tree->right->depth = need_depth;
-	}
-           
-	return tree;
-}
-
-static AABinaryTreeNode* __aa_binary_tree_get_predecessor(AABinaryTree tree){
-	if (tree == NULL)
-		return NULL;
-	while (tree->right != NULL){
-		tree = tree->right;
-	}
-	return tree;
-}
-
-static AABinaryTreeNode* __aa_binary_tree_get_successor(AABinaryTree tree){
-	if (tree == NULL)
-		return NULL;
-	while (tree->left != NULL){
-		tree = tree->left;
-	}
-	return tree;
-}
-
-
-
 static AABinaryTreeNode* __aa_binary_tree_remove(AABinaryTree tree, int del_value){
-	if (tree == NULL)
-		return NULL;
-	else if (del_value > tree->value)
-		tree->right = __aa_binary_tree_remove(tree->right, del_value);
-	else if (del_value < tree->value)
-		tree->left = __aa_binary_tree_remove(tree->left, del_value);
-	else{
-		if (tree->left == NULL && tree->right == NULL){
-			free(tree);
-			return NULL;
+	if (tree != bottom){
+		last = tree;
+		if (del_value < tree->value){
+			tree->left = __aa_binary_tree_remove(tree->left, del_value);
 		}
-		else if (tree->left == NULL){
-			int successor_value = __aa_binary_tree_get_successor(tree->right)->value;
-			tree->right = __aa_binary_tree_remove(tree->right, successor_value);
-			tree->value = successor_value;
+		else {
+			deleted = tree;
+			tree->right = __aa_binary_tree_remove(tree->right, del_value);
 		}
-		else{
-			int predecessor_value = __aa_binary_tree_get_predecessor(tree->left)->value;
-			tree->left = __aa_binary_tree_remove(tree->left, predecessor_value);
-			tree->value = predecessor_value;
+		
+		if ((tree == last) && (deleted != bottom) && (deleted->value == del_value)){
+			deleted->value = tree->value;
+			deleted = bottom;
+			tree = tree->right;
+			free(last);
+		}
+		else if ((tree->left->depth < tree->depth - 1) || 
+			(tree->right->depth < tree->depth -1)){
+			tree->depth--;
+			if (tree->right->depth > tree->depth){
+				tree->right->depth = tree->depth;
+			}
+			tree = __aa_binary_treeNode_skew(tree);
+			tree->right = __aa_binary_treeNode_skew(tree->right);
+			tree->right->right = __aa_binary_treeNode_skew(tree->right->right);
+			tree = __aa_binary_treeNode_split(tree);
+			tree->right = __aa_binary_treeNode_split(tree->right);
 		}
 	}
-	
-	tree = __aa_binary_tree_decrease_level(tree);
-	tree = __aa_binary_treeNode_skew(tree);
-	tree->right = __aa_binary_treeNode_skew(tree->right);
-	if (tree->right != NULL){
-		tree->right->right = __aa_binary_treeNode_skew(tree->right->right);
-	}
-	tree = __aa_binary_treeNode_split(tree);
-	tree->right = __aa_binary_treeNode_split(tree->right);
 	return tree;
 }
 
@@ -188,7 +151,7 @@ void aa_binary_tree_remove(AABinaryTree* tree, int del_value){
 
 int aa_binary_tree_search(AABinaryTree tree, int search_value){
 	AABinaryTreeNode* node = tree;
-	while(node != NULL){
+	while(node != bottom){
 		if (node->value < search_value){
 			node = node->right;
 		}
@@ -201,7 +164,6 @@ int aa_binary_tree_search(AABinaryTree tree, int search_value){
 	}
 	return 0;
 }
-
 //--------------------------------------------------------
 //--------------------------------------------------------
 
@@ -218,6 +180,7 @@ int main(){
 	int value;
 	
 	AABinaryTree tree = NULL;
+	aa_binary_tree_init(&tree);
 	
 	while (scanf("%c %d%*c", &command, &value) >= 1){
 		switch(command){
@@ -225,10 +188,10 @@ int main(){
 				aa_binary_tree_insert(&tree, value);
 				break;
 			case 'r':
-				aa_binary_tree_remove (&tree, value);
+				aa_binary_tree_remove(&tree, value);
 				break;
 			case 'f':
-				if ( aa_binary_tree_search (tree, value))
+				if (aa_binary_tree_search(tree, value))
 					puts("yes");
 				else
 					puts("no");

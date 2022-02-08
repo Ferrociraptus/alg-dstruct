@@ -11,6 +11,11 @@
 #define TESTS_AMOUNT 100
 #define OPERATIONS_MULTYPLAYER 10000
 
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+
+
 int main(){
 	setlocale(LC_ALL, "ru_Ru");
 	srand(time(NULL));
@@ -23,14 +28,15 @@ int main(){
 	
 	BinaryTree tree = NULL;
 	AABinaryTree aa_tree = NULL;
+	aa_binary_tree_init(&aa_tree);
 	
-	for (int i = 1; i <= TESTS_AMOUNT; i++){
+	for (int test = 1; test <= TESTS_AMOUNT; test++){
 		clock_t begin, end;
 		double usual_binary_tree_time_result, aa_binary_tree_time_result;
 		
-		unsigned long operations_amount = i * OPERATIONS_MULTYPLAYER;
+		unsigned long operations_amount = test * OPERATIONS_MULTYPLAYER;
 		
-		fprintf(csv_table, "%d\t%lu\t", i, operations_amount);
+		fprintf(csv_table, "%d\t%lu\t", test, operations_amount);
 		
 		// Insertion check
 		{
@@ -70,13 +76,13 @@ int main(){
 		{
 			begin = clock();
 			for (int i = 0; i < operations_amount; i++)
-				binary_tree_search(tree, rand() % NUMBERS_VALUE_RANGE);
+				binary_tree_remove(&tree, rand() % NUMBERS_VALUE_RANGE);
 			end = clock();
 			usual_binary_tree_time_result = (double)(end - begin) / CLOCKS_PER_SEC;
 			
 			begin = clock();
 			for (int i = 0; i < operations_amount; i++)
-				aa_binary_tree_search(aa_tree, rand() % NUMBERS_VALUE_RANGE);
+				aa_binary_tree_remove(&aa_tree, rand() % NUMBERS_VALUE_RANGE);
 			end = clock();
 			aa_binary_tree_time_result = (double)(end - begin) / CLOCKS_PER_SEC;
 		
@@ -84,6 +90,7 @@ int main(){
 		}
 		binary_tree_clear(&tree);
 		aa_binary_tree_clear(&aa_tree);
+		printf("Test# %d/%d:\tDone\n", test, TESTS_AMOUNT);
 	}
 	fclose(csv_table);
 	return 0;

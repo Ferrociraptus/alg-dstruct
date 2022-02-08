@@ -85,44 +85,59 @@ int binary_tree_search(BinaryTree tree, int value){
 	return 0;
 }
 
+static BinaryTreeNode* __binary_tree_get_predecessor(BinaryTree tree){
+	if (tree == NULL)
+		return NULL;
+	while (tree->right != NULL){
+		tree = tree->right;
+	}
+	return tree;
+}
+
+static BinaryTreeNode* __binary_tree_get_successor(BinaryTree tree){
+	if (tree == NULL)
+		return NULL;
+	while (tree->left != NULL){
+		tree = tree->left;
+	}
+	return tree;
+}
 
 void binary_tree_remove(BinaryTree* tree_p, int value){
 	BinaryTreeNode* node = *tree_p;
+	BinaryTreeNode** parent_field = NULL;
 
 	while(node != NULL){
 		if (node->value > value){
+			parent_field = &node->left;
 			node = node->left;
 		}
 		else if (node->value == value){
-			if (node->right != NULL){
-				swap_value(node->value, node->right->value);
-				if (node->right->left == NULL && node->right->right == NULL){
-					free(node->right);
-					node->right = NULL;
-					return;
+			if (node->right == NULL && node->left == NULL){
+				if (parent_field == NULL){
+					*tree_p = NULL;
 				}
-				node = node->right;
-				continue;
-			}
-			else if (node->left != NULL){
-				swap_value(node->value, node->left->value);
-				if (node->left->left == NULL && node->left->right == NULL){
-					free(node->left);
-					node->left = NULL;
-					return;
+				else {
+					*parent_field = NULL;
 				}
-				node = node->left;
-				continue;
-			}
-			
-			if (node == *tree_p && node->left == NULL && node->right == NULL){
 				free(node);
-				*tree_p = NULL;
 				return;
 			}
-			
+			else if (node->right != NULL){
+				BinaryTreeNode* successor = __binary_tree_get_successor(node->right);
+				swap_value(node->value, successor->value);
+				binary_tree_remove(&node->right, successor->value);
+				return;
+			}
+			else {
+				BinaryTreeNode* predecessor = __binary_tree_get_predecessor(node->left);
+				swap_value(node->value, predecessor->value);
+				binary_tree_remove(&node->left, predecessor->value);
+				return;
+			}
 		}
 		else{
+			parent_field = &node->right;
 			node = node->right;
 		}
 	}
