@@ -98,7 +98,7 @@ void aa_binary_tree_insert(AABinaryTree* tree_p, int value){
 
 
 static AABinaryTreeNode* __aa_binary_tree_remove(AABinaryTree tree, int del_value){
-	if (tree != bottom){
+	if (tree != bottom && tree != NULL){
 		last = tree;
 		if (del_value < tree->value){
 			tree->left = __aa_binary_tree_remove(tree->left, del_value);
@@ -137,7 +137,7 @@ void aa_binary_tree_remove(AABinaryTree* tree, int del_value){
 
 int aa_binary_tree_search(AABinaryTree tree, int search_value){
 	AABinaryTreeNode* node = tree;
-	while(node != bottom){
+	while(node != bottom && node != NULL){
 		if (node->value < search_value){
 			node = node->right;
 		}
