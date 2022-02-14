@@ -174,7 +174,6 @@ TwoThreeTreeNode* __two_three_tree_insert(TwoThreeTreeNode* node, int value){
 			if (buf_node->type == TWO_NODE_TYPE && node_splitted){
 				value = buf_node->first_value;
 				if (node_info.in_rage_info == LOWER_THEN_RANGE){
-// 					__swap_branch_pointers(&node->middle, &node->right);
 					__swap_branch_pointers(&buf_node->left, &node->left);
 					__swap_branch_pointers(&buf_node->right, &node->middle);
 				}
@@ -224,19 +223,19 @@ TwoThreeTreeNode* __two_three_tree_insert(TwoThreeTreeNode* node, int value){
 					switch (node_info.in_rage_info){
 						// splitting node
 						case IN_RANGE:
-							// node->first_value  val node->second_value
+							// node->first_value | val | node->second_value
 							new_node->left = node;
 							new_node->right = buf_node;
 							return new_node;
 							
 						case LOWER_THEN_RANGE:
-							// val node->first_value node->second_value
+							// val | node->first_value | node->second_value
 							node->left = new_node;
 							node->right = buf_node;
 							return node;
 							
 						case GREATER_THEN_RANGE:
-							// node->first_value node->second_value val
+							// node->first_value | node->second_value | val
 							buf_node->left = node;
 							buf_node->right = new_node;
 							return buf_node;
@@ -260,7 +259,7 @@ TwoThreeTreeNode* __two_three_tree_insert(TwoThreeTreeNode* node, int value){
 						node_ingected_flag = 1;
 						switch(node_info.in_rage_info){
 							case IN_RANGE:
-							// node->first_value  buf_node node->second_value
+							// node->first_value | buf_node | node->second_value
 								new_node = __two_three_node_new(node->first_value);
 								
 								new_node->left = node->left;
@@ -277,7 +276,7 @@ TwoThreeTreeNode* __two_three_tree_insert(TwoThreeTreeNode* node, int value){
 								
 								return buf_node; 
 							case LOWER_THEN_RANGE:
-							// buf_node node->first_value node->second_value
+							// buf_node | node->first_value | node->second_value
 								new_node = __two_three_node_new(node->second_value);
 
 								__swap_branch_pointers (&node->right, &new_node->right);
