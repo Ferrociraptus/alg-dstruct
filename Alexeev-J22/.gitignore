@@ -2,7 +2,7 @@
 .idea/
 .~lock*
 *.kdev4
-lab_2
+lab_3
 bin/*
 *.txt
 !input.txt
