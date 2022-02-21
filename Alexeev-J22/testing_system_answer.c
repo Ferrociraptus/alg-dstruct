@@ -5,7 +5,7 @@
 #define DEFAULT_SIZE 2048
 // prob function: (hash() + PROB_CONST_1*i^2 + PROB_CONST_2*i)%map_size
 #define PROB_CONST_1 127
-#define PROB_CONST_2 19
+#define PROB_CONST_2 4
 
 typedef struct __StrOAHashMap StrOAHashMap;
 
@@ -55,7 +55,6 @@ static unsigned __hash(int key){
 	double hash = (unsigned)__hash;
 	hash /= key;
 	hash *= 5e10;
-	hash += key;
 	return (unsigned)hash;
 }
 
@@ -158,6 +157,8 @@ void str_oa_hash_map_remove(StrOAHashMap* map, int key){
 			free(item->value);
 			return;
 		}
+		else if (item->type == EMPTY_ITEM)
+			return;
 	}
 }
 
@@ -172,6 +173,8 @@ int str_oa_hash_map_contains(StrOAHashMap* map, int key){
 		if (item->type == FILLED_ITEM && key == item->key){
 			return 1;
 		}
+		else if (item->type == EMPTY_ITEM)
+			return 0;
 	}
 	return 0;
 }
@@ -189,8 +192,6 @@ int main(){
 	StrOAHashMap* map = str_oa_hash_map_new();
 
 	while (scanf("%c", &command) >= 1){
-		if (command == '\n')
-			continue;
 		if (command != 'q'){
 			scanf("%d", &key);
 		}

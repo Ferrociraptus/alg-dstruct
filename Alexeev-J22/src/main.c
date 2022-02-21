@@ -36,6 +36,7 @@ int main(){
 					puts(buf);
 					free(buf);
 				}
+				puts("None");
 				break;
 			case 'q':
 				return 0;

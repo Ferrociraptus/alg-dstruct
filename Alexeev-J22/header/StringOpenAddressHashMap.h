@@ -3,8 +3,8 @@
 
 #define DEFAULT_SIZE 2048
 // prob function: (hash() + PROB_CONST_1*i^2 + PROB_CONST_2*i)%map_size
-#define PROB_CONST_1 13
-#define PROB_CONST_2 19
+#define PROB_CONST_1 127
+#define PROB_CONST_2 4
 
 typedef struct __StrOAHashMap StrOAHashMap;
 

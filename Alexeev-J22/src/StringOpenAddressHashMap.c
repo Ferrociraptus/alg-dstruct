@@ -116,7 +116,7 @@ int str_oa_hash_map_set(StrOAHashMap* map, char* key, char* value) {
 	for (int i = 0; i < map->size; i++){
 		unsigned index = __prob(map, hash, i);
 		StrOAHashMapItem* item = &map->items[index];
-		
+
 		if (item->type != FILLED_ITEM){
 			if (item->type == DELETED_ITEM){
 				StrOAHashMapItem* check;
@@ -166,6 +166,8 @@ char* str_oa_hash_map_get(StrOAHashMap* map, char* key){
 		if (item->type == FILLED_ITEM && strcmp(key, item->key) == 0){
 			return __dublicate_str(item->value);
 		}
+		else if (item->type == EMPTY_ITEM)
+			return NULL;
 	}
 	return NULL;
 }
@@ -180,6 +182,8 @@ int str_oa_hash_map_contains(StrOAHashMap* map, char* key){
 		if (item->type == FILLED_ITEM && strcmp(key, item->key) == 0){
 			return 1;
 		}
+		else if (item->type == EMPTY_ITEM)
+			return 0;
 	}
 	return 0;
 }
