@@ -2,7 +2,7 @@
 #ifndef OPEN_ADRESS_HASH_TREE
 #define OPEN_ADRESS_HASH_TREE
 
-#define DEFAULT_SIZE 2048
+#define DEFAULT_SIZE 524288
 // prob function: (hash() + PROB_CONST_1*i^2 + PROB_CONST_2*i)%map_size
 #define PROB_CONST_1 127
 #define PROB_CONST_2 4
@@ -54,7 +54,8 @@ struct __StrOAHashMap{
 static unsigned __hash(int key){
 	double hash = (unsigned)__hash;
 	hash /= key;
-	hash *= 5e10;
+	hash *= 1e10;
+	hash += key;
 	return (unsigned)hash;
 }
 
